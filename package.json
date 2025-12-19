@@ -8,7 +8,8 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "nodemon index.js",
 		"lint": "eslint .",
-		"lint:fix": "eslint . --fix"
+		"lint:fix": "eslint . --fix",
+		"seed": "node ./seed/index.seed.js "
 	},
 	"repository": {
 		"type": "git",
