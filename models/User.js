@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
     {
@@ -10,6 +10,6 @@ const UserSchema = new mongoose.Schema(
         employeeProfile: { type: String, ref: 'Employee', default: null }, // Reference to Employee model
     },
     { timestamps: true } // Automatically manage createdAt and updatedAt fields
-)
+);
 
-module.exports = mongoose.model('User', UserSchema);
+export default mongoose.model("User", UserSchema);

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const OnboardingApplicationSchema = new mongoose.Schema(
     {
@@ -20,9 +20,9 @@ const OnboardingApplicationSchema = new mongoose.Schema(
         snapshot: { type: mongoose.Schema.Types.Mixed, default: null },
     },
     { timestamps: true } // Automatically manage createdAt and updatedAt fields
-)
+);
 
 // Ensure one-to-one relationship between Employee and OnboardingApplication
 OnboardingApplicationSchema.index({ employeeId: 1 }, { unique: true });
 
-module.exports = mongoose.model('OnboardingApplication', OnboardingApplicationSchema);
+export default mongoose.model('OnboardingApplication', OnboardingApplicationSchema);

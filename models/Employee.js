@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 // embedded schemas
 const AddressSchema = new mongoose.Schema(
@@ -123,7 +123,7 @@ EmployeeSchema.pre("validate", function (next) {
     }
 });
 
-module.exports = mongoose.model('Employee', EmployeeSchema);
+export default mongoose.model('Employee', EmployeeSchema);
 
 
 
