@@ -1,24 +1,26 @@
-import mongoose from "mongoose";
+// import mongoose from "mongoose";
+import { EMPLOYEE_IDS, HOUSE_IDS } from "../utils/ids.js";
+import Employee from "../models/Employee.js";
 // import db connection
 // import the models
 
 export const seedEmployees = async () => {
   try {
-    // make db connection
     // optionally delete all data in user first
-    // await User.deleteMany();
+    // await Employee.deleteMany();
 
     await Employee.insertMany([
       {
-        firstName: "Firstname",
-        lastName: "Lastname",
-        middleName: "Middlename",
-        preferredName: "Preferred",
-        profilePicture:
+        _id: EMPLOYEE_IDS.FIRST,
+        firstName: "Alice",
+        lastName: "Wu",
+        middleName: "Constance",
+        preferredName: "Alice",
+        profilePictureUrl:
           "https://media.istockphoto.com/id/2022468311/vector/single-man-stick-figure-icon.jpg?s=612x612&w=0&k=20&c=_xCA1Y3pMvigQ9mejEAM56skgfAdBorLRqwiKckuTws=",
         dateOfBirth: new Date("2000-06-29"),
-        gender: "male",
-        workAuthorization: "F1",
+        gender: "Female",
+        workAuthorization: "F1(CPT/OPT)",
         otherAuth: "", //what needs to be if it is not 'Other'
         workAuthorizationStart: new Date("2024-03-08"),
         workAuthorizationEnd: new Date("2029-03-08"),
@@ -27,11 +29,11 @@ export const seedEmployees = async () => {
           model: "Civic",
           color: "Silver",
         },
-        driversLicense: {
+        driverLicense: {
           number: "1234567890",
           exp: new Date("2028-03-03"),
         },
-        driversLicenseDoc:
+        driverLicenseDoc:
           "https://swiftmedia.s3.amazonaws.com/mountain.swiftcom.com/images/sites/5/2016/08/11143810/Codriverslicense-atd-030116.jpg",
         cellPhone: "1234567890",
         workPhone: "0987654321",
@@ -42,19 +44,28 @@ export const seedEmployees = async () => {
           state: "Washington",
           zip: "98012",
         },
-        reference: {
-          firstName: "referrer",
-          lastName: "last",
-          middleName: "middle",
-          phone: "1029384756",
-          email: "referrer@domain.com",
-          relationship: "relational",
-        },
+        references: [
+          {
+            firstName: "Manny",
+            lastName: "Pacquiao",
+            relationship: "relational",
+            phone: "1029384756",
+            email: "firstref@domain.com",
+          },
+          {
+            firstName: "Floyd",
+            lastName: "Mayweather",
+            relationship: "relational",
+            phone: "1029384756",
+            email: "secondref@domain.com",
+          },
+        ],
         ssn: "12345678",
         emergencyContacts: [
           {
             firstName: "first",
             lastName: "emergency",
+            middleName: "middle",
             phone: "21548751849",
             email: "firstemerg@domain.com",
             relationship: "siblings",
@@ -62,24 +73,20 @@ export const seedEmployees = async () => {
           {
             firstName: "second",
             lastName: "emergency",
+            middleName: "middle",
             phone: "1452469109",
             email: "secondemerg@domain.com",
-            relationship: "siblings",
+            relationship: "parent",
           },
         ],
-        houseId: new mongoose.Types.ObjectId("12geg9ey19edudw17dt12979816nd"),
-        currDocumentId: new mongoose.Types.ObjectId(
-          "12geg9ey19edudw17dt12979816nd"
-        ),
-        onBoarding: new mongoose.Types.ObjectId(
-          "12geg9ey19edudw17dt12979816nd"
-        ),
+        houseId: HOUSE_IDS.FIRST,
+        // currDocumentId and onboarding I set to null
       },
     ]);
 
-    process.exit(0);
+    // process.exit(0);
   } catch (err) {
     console.error(err);
-    process.exit(1);
+    // process.exit(1);
   }
 };
