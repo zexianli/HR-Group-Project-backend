@@ -9,7 +9,8 @@
 		"dev": "nodemon index.js",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
-		"seed": "node ./seed/index.seed.js "
+		"seed": "node ./seed/index.seed.js ",
+		"prepare": "husky"
 	},
 	"repository": {
 		"type": "git",
@@ -32,8 +33,16 @@
 	},
 	"devDependencies": {
 		"eslint": "^9.39.2",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.7",
 		"morgan": "^1.10.1",
 		"nodemon": "^3.1.11",
 		"prettier": "^3.7.4"
+	},
+	"lint-staged": {
+		"*.js": [
+			"eslint --fix",
+			"prettier --write"
+		]
 	}
 }
