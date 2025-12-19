@@ -1,14 +1,14 @@
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from 'crypto';
 
 export const USER_IDS = {
-  TEST_FIRST_HR: uuidv4(),
-  TEST_FIRST_EMPLOYEE: uuidv4(),
+	TEST_FIRST_HR: randomUUID(),
+	TEST_FIRST_EMPLOYEE: randomUUID(),
 };
 
 export const EMPLOYEE_IDS = {
-  FIRST: uuidv4(),
+	FIRST: randomUUID(),
 };
 
 export const HOUSE_IDS = {
-  FIRST: uuidv4(),
+	FIRST: randomUUID(),
 };
