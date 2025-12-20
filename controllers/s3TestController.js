@@ -22,6 +22,10 @@ export async function testUploadToS3(req, res) {
 
 /**
  * Sample test:
- * method: POST
- * 
+ * Method: POST
+ * URL: http://localhost:3000/api/s3/upload
+ * Body:
+ *   key: file
+ *   type: File
+ *   choose any pdf/image
  */
