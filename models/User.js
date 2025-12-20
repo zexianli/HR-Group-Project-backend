@@ -1,15 +1,46 @@
 import mongoose from "mongoose";
 
+const ROLES = ["HR", "EMPLOYEE"];
+
 const UserSchema = new mongoose.Schema(
-    {
-        _id: { type: String, required: true }, // UUID
-        username: {type: String, required: true, unique: true, trim: true },
-        email: { type: String, required: true, unique: true, trim: true, lowercase: true },
-        password: { type: String, required: true }, // Hashed password
-        role: { type: String, enum: ['HR', 'EMPLOYEE'], default: 'EMPLOYEE', required: true },
-        employeeProfile: { type: String, ref: 'Employee', default: null }, // Reference to Employee model
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
-    { timestamps: true } // Automatically manage createdAt and updatedAt fields
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    passwordHash: {
+      type: String,
+      required: true,
+      select: false,
+    },
+    role: {
+      type: String,
+      enum: ROLES,
+      default: "EMPLOYEE",
+      required: true,
+      index: true,
+    },
+    onboardingStatus: {
+      type: String,
+      enum: ["NOT_STARTED", "PENDING", "APPROVED", "REJECTED"],
+      default: "NOT_STARTED",
+      index: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { timestamps: true }
 );
 
 export default mongoose.model("User", UserSchema);
