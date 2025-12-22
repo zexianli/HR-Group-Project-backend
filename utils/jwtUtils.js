@@ -14,7 +14,7 @@ export const generateJWTToken = (user) => {
     email: user.email,
   };
 
-  return jwt.sign(payload, secret, { expiresIn: "24h" });
+  return jwt.sign(payload, secret, { expiresIn: "3h" });
 };
 
 export const verifyJWTToken = (token) => {
