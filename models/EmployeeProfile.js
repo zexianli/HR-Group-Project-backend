@@ -13,7 +13,7 @@ const AddressSchema = new mongoose.Schema(
     state: { type: String, default: "", trim: true },
     zip: { type: String, default: "", trim: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const CarSchema = new mongoose.Schema(
@@ -22,7 +22,7 @@ const CarSchema = new mongoose.Schema(
     model: { type: String, default: "", trim: true },
     color: { type: String, default: "", trim: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const DriverLicenseSchema = new mongoose.Schema(
@@ -30,7 +30,7 @@ const DriverLicenseSchema = new mongoose.Schema(
     number: { type: String, default: "", trim: true },
     expirationDate: { type: Date, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ReferenceSchema = new mongoose.Schema(
@@ -42,7 +42,7 @@ const ReferenceSchema = new mongoose.Schema(
     email: { type: String, default: "", trim: true, lowercase: true },
     relationship: { type: String, default: "", trim: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const EmergencyContactSchema = new mongoose.Schema(
@@ -54,7 +54,7 @@ const EmergencyContactSchema = new mongoose.Schema(
     email: { type: String, default: "", trim: true, lowercase: true },
     relationship: { type: String, default: "", trim: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const WORK_AUTH = [
@@ -96,7 +96,12 @@ const EmployeeProfileSchema = new mongoose.Schema(
     // So email should NOT be duplicated here.
     ssn: { type: String, required: true, trim: true }, // consider encryption/masking at service layer
     dateOfBirth: { type: Date, required: true },
-    gender: { type: String, enum: GENDER, required: true, default: "NO_ANSWER" },
+    gender: {
+      type: String,
+      enum: GENDER,
+      required: true,
+      default: "NO_ANSWER",
+    },
 
     // Profile picture stored in S3 (store key rather than full URL if you plan to generate signed URLs)
     profilePictureKey: { type: String, default: "" },
@@ -131,18 +136,28 @@ const EmployeeProfileSchema = new mongoose.Schema(
         message: "At least one emergency contact is required.",
       },
     },
+
+    // House assignment (reference to House model)
+    houseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "House",
+      default: null,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /**
  * Conditional validation: if workAuthorizationType is OTHER, require otherWorkAuthorizationTitle
  */
 EmployeeProfileSchema.pre("validate", function (next) {
-  if (this.workAuthorizationType === "OTHER" && !this.otherWorkAuthorizationTitle) {
+  if (
+    this.workAuthorizationType === "OTHER" &&
+    !this.otherWorkAuthorizationTitle
+  ) {
     this.invalidate(
       "otherWorkAuthorizationTitle",
-      "Please specify the work authorization title when type is OTHER."
+      "Please specify the work authorization title when type is OTHER.",
     );
   }
   next();
