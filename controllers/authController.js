@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { z } from "zod";
 import User from "../models/User.js";
 import EmployeeProfile from "../models/EmployeeProfile.js";
+import OnboardingApplication from "../models/OnboardingApplication.js";
 import RegistrationToken from "../models/RegistrationToken.js";
 import House from "../models/House.js";
 import { generateJWTToken } from "../utils/jwtUtils.js";
@@ -139,6 +140,10 @@ export const register = async (req, res) => {
       ],
     });
 
+    await OnboardingApplication.create({
+      userId: newUser._id,
+    });
+    
     tokenData.isUsed = true;
     await tokenData.save();
 
