@@ -1,38 +1,33 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const OPTDocumentSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
-    employeeId: { type: String, ref: "Employee", required: true },
+    employeeId: { type: String, ref: 'Employee', required: true },
 
     documentType: {
       type: String,
-      enum: ["Receipt", "EAD", "I-983", "I-20"],
+      enum: ['RECEIPT', 'EAD', 'I-983', 'I-20'],
       required: true,
     },
 
-    documentURL: { type: String, required: true },
+    documentKey: { type: String, required: true, trim: true },
 
     status: {
       type: String,
-      enum: ["Pending", "Approved", "Rejected"],
-      default: "Pending",
+      enum: ['PENDING', 'APPROVED', 'REJECTED'],
+      default: 'PENDING',
       required: true,
     },
 
-    feedback: { type: String, default: "" },
-    reviewedBy: { type: String, ref: "User", default: null }, // HR user
+    feedback: { type: String, default: '' },
+    reviewedBy: { type: String, ref: 'User', default: null }, // HR user
     reviewedAt: { type: Date, default: null },
     uploadedAt: { type: Date, default: () => new Date() },
-
-    version: { type: Number, default: 1 }, // incremented on each resubmission
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 // Ensure unique combination of employeeId, documentType, and version
-OPTDocumentSchema.index(
-  { employeeId: 1, documentType: 1, version: -1 },
-  { unique: true },
-);
+OPTDocumentSchema.index({ employeeId: 1, documentType: 1 }, { unique: true });
 
-export default mongoose.model("OPTDocument", OPTDocumentSchema);
+export default mongoose.model('OPTDocument', OPTDocumentSchema);

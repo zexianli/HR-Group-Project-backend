@@ -1,7 +1,7 @@
 import express from 'express';
 import morgan from 'morgan';
 import tokenRoutes from './routes/tokenRoutes.js';
-import s3TestRoutes from './routes/s3Routes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import cors from 'cors';
 
@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 app.use('/api/tokens', tokenRoutes);
-app.use('/api/s3', s3TestRoutes);
+app.use('/api', uploadRoutes);
 app.use('/api/auth', authRoutes);
 
 app.use('/api', (req, res) => {
