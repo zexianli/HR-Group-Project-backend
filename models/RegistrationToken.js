@@ -29,7 +29,7 @@ const RegistrationTokenSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
+      // index: true,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -48,6 +48,7 @@ const RegistrationTokenSchema = new mongoose.Schema(
 // set TTL index on expiresAt field
 // Add { expireAfterSeconds: 0 } to make documents expire exactly at expiresAt time
 // MongoDB will automatically delete documents once expiresAt < now
+// Maybe don't need this because HR needs to be able see the tokens sent
 RegistrationTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.model('RegistrationToken', RegistrationTokenSchema);
