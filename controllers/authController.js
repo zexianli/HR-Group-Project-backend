@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import EmployeeProfile from "../models/EmployeeProfile.js";
 import OnboardingApplication from "../models/OnboardingApplication.js";
@@ -72,11 +73,16 @@ export const validateToken = async (req, res) => {
 };
 
 export const register = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     const validationResult = registerSchema.safeParse(req.body);
 
     if (!validationResult.success) {
       const errors = validationResult.error.errors.map((err) => err.message);
+      await session.abortTransaction();
       return res.status(400).json({
         message: errors[0],
         errors: errors,
@@ -85,92 +91,128 @@ export const register = async (req, res) => {
 
     const { token, username: cleanUsername, password } = validationResult.data;
 
-    const tokenData = await RegistrationToken.findOne({
-      token: token.trim(),
-    });
+    const tokenData = await RegistrationToken.findOneAndUpdate(
+      {
+        token: token.trim(),
+        isUsed: false,
+        expiresAt: { $gt: new Date() },
+      },
+      {
+        $set: { isUsed: true },
+      },
+      {
+        session,
+        new: false,
+      },
+    );
 
     if (!tokenData) {
-      return res.status(404).json({
-        message: "Invalid or non-existent registration token",
-      });
-    }
+      const existingToken = await RegistrationToken.findOne({
+        token: token.trim(),
+      }).session(session);
 
-    if (tokenData.isUsed) {
-      return res.status(409).json({
-        message: "Registration token has already been used",
-      });
-    }
+      await session.abortTransaction();
 
-    if (new Date() > tokenData.expiresAt) {
-      return res.status(410).json({
-        message: "Registration token has expired",
+      if (!existingToken) {
+        return res.status(404).json({
+          message: "Invalid or non-existent registration token",
+        });
+      }
+
+      if (existingToken.isUsed) {
+        return res.status(409).json({
+          message: "Registration token has already been used",
+        });
+      }
+
+      if (new Date() > existingToken.expiresAt) {
+        return res.status(410).json({
+          message: "Registration token has expired",
+        });
+      }
+
+      return res.status(400).json({
+        message: "Unable to process registration token",
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
-      username: cleanUsername,
-      email: tokenData.email,
-      passwordHash: hashedPassword,
-      role: "EMPLOYEE",
-      onboardingStatus: "NOT_STARTED",
-      isActive: true,
-    });
-
-    // Prefill with PENDING
-    const employeeProfile = await EmployeeProfile.create({
-      userId: newUser._id,
-      firstName: "PENDING",
-      lastName: "PENDING",
-      ssn: "PENDING",
-      dateOfBirth: new Date("1900-01-01"),
-      gender: "NO_ANSWER",
-      cellPhone: "PENDING",
-      workAuthorizationType: "OTHER",
-      otherWorkAuthorizationTitle: "PENDING",
-      emergencyContacts: [
+    const [newUser] = await User.create(
+      [
         {
-          firstName: "PENDING",
-          lastName: "PENDING",
-          phone: "PENDING",
-          email: "PENDING",
-          relationship: "PENDING",
+          username: cleanUsername,
+          email: tokenData.email,
+          passwordHash: hashedPassword,
+          role: "EMPLOYEE",
+          onboardingStatus: "NOT_STARTED",
+          isActive: true,
         },
       ],
-    });
+      { session },
+    );
 
-    await OnboardingApplication.create({
-      userId: newUser._id,
-    });
-    
-    tokenData.isUsed = true;
-    await tokenData.save();
+    const [employeeProfile] = await EmployeeProfile.create(
+      [
+        {
+          userId: newUser._id,
+          firstName: "PENDING",
+          lastName: "PENDING",
+          ssn: "PENDING",
+          dateOfBirth: new Date("1900-01-01"),
+          gender: "NO_ANSWER",
+          cellPhone: "PENDING",
+          workAuthorizationType: "OTHER",
+          otherWorkAuthorizationTitle: "PENDING",
+          emergencyContacts: [
+            {
+              firstName: "PENDING",
+              lastName: "PENDING",
+              phone: "PENDING",
+              email: "PENDING",
+              relationship: "PENDING",
+            },
+          ],
+        },
+      ],
+      { session },
+    );
 
-    try {
-      const count = await House.countDocuments();
+    await OnboardingApplication.create(
+      [
+        {
+          userId: newUser._id,
+        },
+      ],
+      { session },
+    );
 
-      if (count > 0) {
-        const random = Math.floor(Math.random() * count);
-        const randomHouse = await House.findOne().skip(random);
+    const count = await House.countDocuments().session(session);
 
-        if (randomHouse) {
-          await Promise.all([
-            House.findByIdAndUpdate(randomHouse._id, {
-              $push: { residentEmployeeIds: employeeProfile._id },
-            }),
-            EmployeeProfile.findByIdAndUpdate(employeeProfile._id, {
-              houseId: randomHouse._id,
-            }),
-          ]);
-          console.log(
-            `Assigned employee ${employeeProfile._id} to house ${randomHouse._id}`,
-          );
-        }
+    if (count > 0) {
+      const random = Math.floor(Math.random() * count);
+      const randomHouse = await House.findOne().skip(random).session(session);
+
+      if (randomHouse) {
+        await Promise.all([
+          House.findByIdAndUpdate(
+            randomHouse._id,
+            { $push: { residentEmployeeIds: employeeProfile._id } },
+            { session },
+          ),
+          EmployeeProfile.findByIdAndUpdate(
+            employeeProfile._id,
+            { houseId: randomHouse._id },
+            { session },
+          ),
+        ]);
+        console.log(
+          `Assigned employee ${employeeProfile._id} to house ${randomHouse._id}`,
+        );
       }
-    } catch (houseError) {
-      console.error("House assignment error:", houseError);
     }
+
+    await session.commitTransaction();
 
     const jwtToken = generateJWTToken(newUser);
 
@@ -187,6 +229,7 @@ export const register = async (req, res) => {
       },
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Registration error:", error);
 
     if (error instanceof z.ZodError) {
@@ -221,5 +264,7 @@ export const register = async (req, res) => {
       message: "An error occurred during registration",
       error: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
