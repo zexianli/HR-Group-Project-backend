@@ -1,38 +1,81 @@
 import mongoose from "mongoose";
 
+const DOCUMENT_TYPES = [
+  "OPT_RECEIPT",
+  "OPT_EAD",
+  "I_983",
+  "I_20",
+];
+
+const DOCUMENT_STATUS = ["PENDING", "APPROVED", "REJECTED"];
+
 const OPTDocumentSchema = new mongoose.Schema(
   {
-    _id: { type: String, required: true },
-    employeeId: { type: String, ref: "Employee", required: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
 
     documentType: {
       type: String,
-      enum: ["Receipt", "EAD", "I-983", "I-20"],
+      enum: DOCUMENT_TYPES,
       required: true,
+      index: true,
     },
 
-    documentURL: { type: String, required: true },
+    fileUrl: {
+      type: String,
+      required: true, // S3 URL
+    },
 
     status: {
       type: String,
-      enum: ["Pending", "Approved", "Rejected"],
-      default: "Pending",
+      enum: DOCUMENT_STATUS,
+      default: "PENDING",
       required: true,
+      index: true,
     },
 
-    feedback: { type: String, default: "" },
-    reviewedBy: { type: String, ref: "User", default: null }, // HR user
-    reviewedAt: { type: Date, default: null },
-    uploadedAt: { type: Date, default: () => new Date() },
+    feedback: {
+      type: String,
+      default: "",
+    },
 
-    version: { type: Number, default: 1 }, // incremented on each resubmission
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // HR
+      default: null,
+    },
+
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+
+    version: {
+      type: Number,
+      default: 1,
+    },
+
+    isLatest: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+
+    uploadedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
-// Ensure unique combination of employeeId, documentType, and version
+
 OPTDocumentSchema.index(
-  { employeeId: 1, documentType: 1, version: -1 },
-  { unique: true },
+  { userId: 1, documentType: 1, isLatest: 1 },
+  { unique: true }
 );
 
 export default mongoose.model("OPTDocument", OPTDocumentSchema);
