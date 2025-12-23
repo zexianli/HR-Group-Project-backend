@@ -1,48 +1,79 @@
 import mongoose from "mongoose";
 
-const AddressSchema = new mongoose.Schema(
-    {
-        num: { type: String, default: "" },
-        street: { type: String, default: "" },
-        city: { type: String, default: "" },
-        state: { type: String, default: "" },
-        zip: { type: String, default: "" },
-    },
-    { _id: false }
+const { Schema } = mongoose;
+
+/**
+ * Embedded schemas
+ */
+
+const AddressSchema = new Schema(
+  {
+    unit: { type: String, trim: true, default: "" },
+    street: { type: String, required: true, trim: true },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    zip: { type: String, required: true, trim: true },
+  },
+  { _id: false }
 );
 
-const LandlordSchema = new mongoose.Schema(
-    {
-        fullName: { type: String, default: "" },
-        phoneNumber: { type: String, default: "" },
-        email: { type: String, default: "" },
-    },
-    { _id: false }
+const LandlordSchema = new Schema(
+  {
+    fullName: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
+  },
+  { _id: false }
 );
 
-const UtilitiesSchema = new mongoose.Schema(
-    {
-        bedrooms: { type: Number, default: 0 },
-        bathrooms: { type: Number, default: 0 },
-        mattresses: { type: Number, default: 0 },
-        tables: { type: Number, default: 0 },
-        chairs: { type: Number, default: 0 },
-    },
-    { _id: false }
+const FacilitySchema = new Schema(
+  {
+    bedrooms: { type: Number, required: true, min: 0 },
+    bathrooms: { type: Number, required: true, min: 0 },
+    mattresses: { type: Number, default: 0, min: 0 },
+    tables: { type: Number, default: 0, min: 0 },
+    chairs: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
 );
 
-const HouseSchema = new mongoose.Schema(
-    {
-        _id: { type: String, required: true },
-        address: { type: AddressSchema, default: () => ({}) },
-        landlord: { type: LandlordSchema, default: () => ({}) },
-        utilities: { type: UtilitiesSchema, default: () => ({}) },
+/**
+ * Main House schema
+ */
 
-        residentEmployeeIds: { type: [String], default: [] },
-
-        description: { type: String, default: "" },
+const HouseSchema = new Schema(
+  {
+    address: {
+      type: AddressSchema,
+      required: true,
     },
-    { timestamps: true }
+
+    landlord: {
+      type: LandlordSchema,
+      required: true,
+    },
+
+    facility: {
+      type: FacilitySchema,
+      required: true,
+    },
+
+    status: {
+      type: String,
+      enum: ["ACTIVE", "INACTIVE"],
+      default: "ACTIVE",
+      index: true,
+    },
+
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
 export default mongoose.model("House", HouseSchema);
