@@ -44,7 +44,7 @@ const RegistrationTokenSchema = new mongoose.Schema(
     }
 );
 
-// set TTL index on expiresAt field 
+// set TTL index on expiresAt field
 // Add { expireAfterSeconds: 0 } to make documents expire exactly at expiresAt time
 // MongoDB will automatically delete documents once expiresAt < now
 RegistrationTokenSchema.index(

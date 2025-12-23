@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 /**
  * Embedded schemas (stored inside EmployeeProfile document)
@@ -7,67 +7,59 @@ import mongoose from "mongoose";
 
 const AddressSchema = new mongoose.Schema(
   {
-    buildingApt: { type: String, default: "", trim: true }, // building/apt #
-    street: { type: String, default: "", trim: true },
-    city: { type: String, default: "", trim: true },
-    state: { type: String, default: "", trim: true },
-    zip: { type: String, default: "", trim: true },
+    buildingApt: { type: String, default: '', trim: true }, // building/apt #
+    street: { type: String, default: '', trim: true },
+    city: { type: String, default: '', trim: true },
+    state: { type: String, default: '', trim: true },
+    zip: { type: String, default: '', trim: true },
   },
-  { _id: false },
+  { _id: false }
 );
 
 const CarSchema = new mongoose.Schema(
   {
-    make: { type: String, default: "", trim: true },
-    model: { type: String, default: "", trim: true },
-    color: { type: String, default: "", trim: true },
+    make: { type: String, default: '', trim: true },
+    model: { type: String, default: '', trim: true },
+    color: { type: String, default: '', trim: true },
   },
-  { _id: false },
+  { _id: false }
 );
 
 const DriverLicenseSchema = new mongoose.Schema(
   {
-    number: { type: String, default: "", trim: true },
+    number: { type: String, default: '', trim: true },
     expirationDate: { type: Date, default: null },
   },
-  { _id: false },
+  { _id: false }
 );
 
 const ReferenceSchema = new mongoose.Schema(
   {
-    firstName: { type: String, default: "", trim: true },
-    lastName: { type: String, default: "", trim: true },
-    middleName: { type: String, default: "", trim: true },
-    phone: { type: String, default: "", trim: true },
-    email: { type: String, default: "", trim: true, lowercase: true },
-    relationship: { type: String, default: "", trim: true },
+    firstName: { type: String, default: '', trim: true },
+    lastName: { type: String, default: '', trim: true },
+    middleName: { type: String, default: '', trim: true },
+    phone: { type: String, default: '', trim: true },
+    email: { type: String, default: '', trim: true, lowercase: true },
+    relationship: { type: String, default: '', trim: true },
   },
-  { _id: false },
+  { _id: false }
 );
 
 const EmergencyContactSchema = new mongoose.Schema(
   {
-    firstName: { type: String, default: "", trim: true },
-    lastName: { type: String, default: "", trim: true },
-    middleName: { type: String, default: "", trim: true },
-    phone: { type: String, default: "", trim: true },
-    email: { type: String, default: "", trim: true, lowercase: true },
-    relationship: { type: String, default: "", trim: true },
+    firstName: { type: String, default: '', trim: true },
+    lastName: { type: String, default: '', trim: true },
+    middleName: { type: String, default: '', trim: true },
+    phone: { type: String, default: '', trim: true },
+    email: { type: String, default: '', trim: true, lowercase: true },
+    relationship: { type: String, default: '', trim: true },
   },
-  { _id: false },
+  { _id: false }
 );
 
-const WORK_AUTH = [
-  "CITIZEN",
-  "GREEN_CARD",
-  "H1B",
-  "L2",
-  "F1_CPT_OPT",
-  "H4",
-  "OTHER",
-];
+const WORK_AUTH = ['CITIZEN', 'GREEN_CARD', 'H1B', 'L2', 'F1_CPT_OPT', 'H4', 'OTHER'];
 
-const GENDER = ["MALE", "FEMALE", "NO_ANSWER"];
+const GENDER = ['MALE', 'FEMALE', 'NO_ANSWER'];
 
 /**
  * EmployeeProfile schema
@@ -79,7 +71,7 @@ const EmployeeProfileSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
       unique: true,
       index: true,
@@ -88,8 +80,8 @@ const EmployeeProfileSchema = new mongoose.Schema(
     // Name section
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
-    middleName: { type: String, default: "", trim: true },
-    preferredName: { type: String, default: "", trim: true },
+    middleName: { type: String, default: '', trim: true },
+    preferredName: { type: String, default: '', trim: true },
 
     // Identity section
     // NOTE: In requirements, email is on User and cannot be edited after token registration.
@@ -100,26 +92,26 @@ const EmployeeProfileSchema = new mongoose.Schema(
       type: String,
       enum: GENDER,
       required: true,
-      default: "NO_ANSWER",
+      default: 'NO_ANSWER',
     },
 
     // Profile picture stored in S3 (store key rather than full URL if you plan to generate signed URLs)
-    profilePictureKey: { type: String, default: "" },
+    profilePictureKey: { type: String, default: '' },
 
     // Address & contact
     address: { type: AddressSchema, default: () => ({}) },
     cellPhone: { type: String, required: true, trim: true },
-    workPhone: { type: String, default: "", trim: true },
+    workPhone: { type: String, default: '', trim: true },
 
     // Employment / authorization (current effective value)
     workAuthorizationType: { type: String, enum: WORK_AUTH, required: true },
-    otherWorkAuthorizationTitle: { type: String, default: "", trim: true },
+    otherWorkAuthorizationTitle: { type: String, default: '', trim: true },
     workAuthorizationStart: { type: Date, default: null },
     workAuthorizationEnd: { type: Date, default: null },
 
     // Driver license (if applicable)
     driverLicense: { type: DriverLicenseSchema, default: () => ({}) },
-    driverLicenseDocKey: { type: String, default: "" },
+    driverLicenseDocKey: { type: String, default: '' },
 
     // Optional car info
     carInformation: { type: CarSchema, default: () => ({}) },
@@ -133,34 +125,30 @@ const EmployeeProfileSchema = new mongoose.Schema(
       default: [],
       validate: {
         validator: (v) => Array.isArray(v) && v.length >= 1,
-        message: "At least one emergency contact is required.",
+        message: 'At least one emergency contact is required.',
       },
     },
 
     // House assignment (reference to House model)
     houseId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "House",
+      ref: 'House',
       default: null,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 /**
  * Conditional validation: if workAuthorizationType is OTHER, require otherWorkAuthorizationTitle
  */
-EmployeeProfileSchema.pre("validate", function (next) {
-  if (
-    this.workAuthorizationType === "OTHER" &&
-    !this.otherWorkAuthorizationTitle
-  ) {
+EmployeeProfileSchema.pre('validate', function () {
+  if (this.workAuthorizationType === 'OTHER' && !this.otherWorkAuthorizationTitle) {
     this.invalidate(
-      "otherWorkAuthorizationTitle",
-      "Please specify the work authorization title when type is OTHER.",
+      'otherWorkAuthorizationTitle',
+      'Please specify the work authorization title when type is OTHER.'
     );
   }
-  next();
 });
 
 /**
@@ -170,4 +158,4 @@ EmployeeProfileSchema.pre("validate", function (next) {
 EmployeeProfileSchema.index({ lastName: 1, firstName: 1 });
 EmployeeProfileSchema.index({ preferredName: 1 });
 
-export default mongoose.model("EmployeeProfile", EmployeeProfileSchema);
+export default mongoose.model('EmployeeProfile', EmployeeProfileSchema);

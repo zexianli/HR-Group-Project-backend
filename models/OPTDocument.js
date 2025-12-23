@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const DOCUMENT_TYPES = [
   "OPT_RECEIPT",
@@ -78,4 +78,4 @@ OPTDocumentSchema.index(
   { unique: true }
 );
 
-export default mongoose.model("OPTDocument", OPTDocumentSchema);
+export default mongoose.model('OPTDocument', OPTDocumentSchema);
