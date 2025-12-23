@@ -150,7 +150,7 @@ const EmployeeProfileSchema = new mongoose.Schema(
 /**
  * Conditional validation: if workAuthorizationType is OTHER, require otherWorkAuthorizationTitle
  */
-EmployeeProfileSchema.pre("validate", function (next) {
+EmployeeProfileSchema.pre("validate", function () {
   if (
     this.workAuthorizationType === "OTHER" &&
     !this.otherWorkAuthorizationTitle
@@ -160,7 +160,6 @@ EmployeeProfileSchema.pre("validate", function (next) {
       "Please specify the work authorization title when type is OTHER.",
     );
   }
-  next();
 });
 
 /**

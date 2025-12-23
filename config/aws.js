@@ -1,25 +1,42 @@
-import 'dotenv/config';
-import { S3Client } from '@aws-sdk/client-s3';
-import { Upload } from '@aws-sdk/lib-storage';
+import { S3Client } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 
-const {
-    AWS_REGION,
-    AWS_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY,
-    AWS_S3_BUCKET,
-} = process.env;
+/**
+ * Validate required AWS environment variables.
+ * This should ONLY be called when AWS is actually needed.
+ */
+export function validateAwsEnv() {
+  const required = [
+    "AWS_REGION",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_S3_BUCKET",
+  ];
 
-if (!AWS_REGION || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_S3_BUCKET) {
-    throw new Error('Missing required AWS environment variables');
+  const missing = required.filter((key) => !process.env[key]);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required AWS environment variables: ${missing.join(", ")}`,
+    );
+  }
 }
 
-export const s3 = new S3Client({
-    region: AWS_REGION,
+/**
+ * Create and return an S3 client.
+ * AWS env vars are validated lazily here.
+ */
+export function getS3Client() {
+  validateAwsEnv();
+
+  return new S3Client({
+    region: process.env.AWS_REGION,
     credentials: {
-        accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
-});
+  });
+}
 
 /**
  * Upload a file buffer to S3
@@ -29,25 +46,32 @@ export const s3 = new S3Client({
  * @param {string} [params.contentType] - file content type, e.g. "application/pdf"
  * @returns {Promise<Object>} - S3 object metadata including bucket, key, and URL
  */
+
 export async function uploadToS3({ body, key, contentType }) {
-    if (!body) throw new Error('uploadToS3: Missing body');
-    if (!key) throw new Error('uploadToS3: Missing key');
+  if (!body) throw new Error("uploadToS3: Missing body");
+  if (!key) throw new Error("uploadToS3: Missing key");
 
-    const upload = new Upload({
-        client: s3,
-        params: {
-            Bucket: AWS_S3_BUCKET,
-            Key: key,
-            Body: body,
-            ContentType: contentType,
-        },
-    });
+  const s3 = getS3Client(); // init delay
 
-    await upload.done();
+  const upload = new Upload({
+    client: s3,
+    params: {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    },
+  });
 
-    const url = `https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${encodeURIComponent(
-        key
-    ).replaceAll('%2F', '/')}`;
+  await upload.done();
 
-    return { bucket: AWS_S3_BUCKET, key, url };
+  const url = `https://${process.env.AWS_S3_BUCKET}.s3.${
+    process.env.AWS_REGION
+  }.amazonaws.com/${encodeURIComponent(key).replaceAll("%2F", "/")}`;
+
+  return {
+    bucket: process.env.AWS_S3_BUCKET,
+    key,
+    url,
+  };
 }

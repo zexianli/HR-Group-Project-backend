@@ -7,16 +7,16 @@ const OPTDocumentSchema = new mongoose.Schema(
 
     documentType: {
       type: String,
-      enum: ["Receipt", "EAD", "I-983", "I-20"],
+      enum: ["RECEIPT", "EAD", "I-983", "I-20"],
       required: true,
     },
 
-    documentURL: { type: String, required: true },
+    documentKey: { type: String, required: true, trim: true },
 
     status: {
       type: String,
-      enum: ["Pending", "Approved", "Rejected"],
-      default: "Pending",
+      enum: ["PENDING", "APPROVED", "REJECTED"],
+      default: "PENDING",
       required: true,
     },
 
@@ -24,15 +24,10 @@ const OPTDocumentSchema = new mongoose.Schema(
     reviewedBy: { type: String, ref: "User", default: null }, // HR user
     reviewedAt: { type: Date, default: null },
     uploadedAt: { type: Date, default: () => new Date() },
-
-    version: { type: Number, default: 1 }, // incremented on each resubmission
   },
   { timestamps: true },
 );
 // Ensure unique combination of employeeId, documentType, and version
-OPTDocumentSchema.index(
-  { employeeId: 1, documentType: 1, version: -1 },
-  { unique: true },
-);
+OPTDocumentSchema.index({ employeeId: 1, documentType: 1 }, { unique: true });
 
 export default mongoose.model("OPTDocument", OPTDocumentSchema);
