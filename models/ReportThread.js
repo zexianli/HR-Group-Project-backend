@@ -1,20 +1,48 @@
 import mongoose from "mongoose";
 
-const ReportThreadSchema = new mongoose.Schema(
-    {
-        _id: { type: String, required: true },
-        createdBy: { type: String, ref: 'Employee', required: true },
-        houseId: { type: String, ref: 'House', required: true },
+const { Schema } = mongoose;
 
-        status: {
-            type: String,
-            enum: ['Open', 'In Review', 'Closed'],
-            default: 'Open'
-        },
-        title: { type: String, required: true, trim: true },
-        description: { type: String, required: true },
+const REPORT_STATUS = ["OPEN", "IN_PROGRESS", "CLOSED"];
+
+const ReportThreadSchema = new Schema(
+  {
+    houseId: {
+      type: Schema.Types.ObjectId,
+      ref: "House",
+      required: true,
+      index: true,
     },
-    { timestamps: true } 
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 200,
+    },
+
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    status: {
+      type: String,
+      enum: REPORT_STATUS,
+      default: "OPEN",
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
 ReportThreadSchema.index({ houseId: 1, createdAt: -1 });
