@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
@@ -8,7 +8,7 @@ const { Schema } = mongoose;
 
 const AddressSchema = new Schema(
   {
-    unit: { type: String, trim: true, default: "" },
+    unit: { type: String, trim: true, default: '' },
     street: { type: String, required: true, trim: true },
     city: { type: String, required: true, trim: true },
     state: { type: String, required: true, trim: true },
@@ -60,14 +60,14 @@ const HouseSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["ACTIVE", "INACTIVE"],
-      default: "ACTIVE",
+      enum: ['ACTIVE', 'INACTIVE'],
+      default: 'ACTIVE',
       index: true,
     },
 
     description: {
       type: String,
-      default: "",
+      default: '',
       trim: true,
     },
   },
@@ -76,4 +76,4 @@ const HouseSchema = new Schema(
   }
 );
 
-export default mongoose.model("House", HouseSchema);
+export default mongoose.model('House', HouseSchema);

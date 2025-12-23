@@ -1,12 +1,12 @@
-import EmployeeProfile from "../models/EmployeeProfile.js";
-import OPTDocument from "../models/OPTDocument.js";
-import { uploadToS3 } from "../config/aws.js";
+import EmployeeProfile from '../models/EmployeeProfile.js';
+import OPTDocument from '../models/OPTDocument.js';
+import { uploadToS3 } from '../config/aws.js';
 
 function extFromMimetype(mimi) {
-  if (mimi === "image/jpeg") return "jpg";
-  if (mimi === "image/png") return "png";
-  if (mimi === "application/pdf") return "pdf";
-  return "bin";
+  if (mimi === 'image/jpeg') return 'jpg';
+  if (mimi === 'image/png') return 'png';
+  if (mimi === 'application/pdf') return 'pdf';
+  return 'bin';
 }
 
 /**
@@ -18,11 +18,11 @@ function extFromMimetype(mimi) {
 export async function uploadFile(req, res) {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+      return res.status(400).json({ error: 'No file uploaded' });
     }
-    const docType = (req.body.docType || "").toLowerCase().trim();
+    const docType = (req.body.docType || '').toLowerCase().trim();
     if (!docType) {
-      return res.status(400).json({ error: "Invalid or missing docType" });
+      return res.status(400).json({ error: 'Invalid or missing docType' });
     }
 
     const userId = req.userId; // from auth middleware
@@ -32,27 +32,27 @@ export async function uploadFile(req, res) {
     let s3Key;
 
     switch (docType) {
-      case "profile_picture":
+      case 'profile_picture':
         s3Key = `users/${userId}/profile_picture.${ext}`;
         break;
-      case "driver_license":
+      case 'driver_license':
         s3Key = `users/${userId}/driver_license.${ext}`;
         break;
-      case "opt_receipt":
+      case 'opt_receipt':
         s3Key = `users/${userId}/opt_receipt.${ext}`;
         break;
-      case "opt_ead":
+      case 'opt_ead':
         s3Key = `users/${userId}/opt_ead.${ext}`;
         break;
-      case "i983":
+      case 'i983':
         s3Key = `users/${userId}/i983.${ext}`;
         break;
-      case "i20":
+      case 'i20':
         s3Key = `users/${userId}/i20.${ext}`;
         break;
 
       default:
-        return res.status(400).json({ error: "Invalid docType" });
+        return res.status(400).json({ error: 'Invalid docType' });
     }
 
     const { url, key, bucket } = await uploadToS3({
@@ -61,34 +61,30 @@ export async function uploadFile(req, res) {
       contentType: req.file.mimetype,
     });
 
-    if (docType === "driver_license") {
+    if (docType === 'driver_license') {
       const r = await EmployeeProfile.updateOne(
         { userId },
         { $set: { driverLicenseDocKey: key } },
-        { upsert: false },
+        { upsert: false }
       );
       if (r.matchedCount === 0) {
-        return res
-          .status(404)
-          .json({ error: "EmployeeProfile not found for this userId" });
+        return res.status(404).json({ error: 'EmployeeProfile not found for this userId' });
       }
-    } else if (docType === "profile_picture") {
+    } else if (docType === 'profile_picture') {
       const r = await EmployeeProfile.updateOne(
         { userId },
         { $set: { profilePictureKey: key } },
-        { upsert: false },
+        { upsert: false }
       );
       if (r.matchedCount === 0) {
-        return res
-          .status(404)
-          .json({ error: "EmployeeProfile not found for this userId" });
+        return res.status(404).json({ error: 'EmployeeProfile not found for this userId' });
       }
     } else {
       const map = {
-        opt_receipt: "RECEIPT",
-        opt_ead: "EAD",
-        i983: "I-983",
-        i20: "I-20",
+        opt_receipt: 'RECEIPT',
+        opt_ead: 'EAD',
+        i983: 'I-983',
+        i20: 'I-20',
       };
 
       const documentType = map[docType];
@@ -102,17 +98,15 @@ export async function uploadFile(req, res) {
             documentKey: key,
           },
         },
-        { upsert: true },
+        { upsert: true }
       );
     }
 
     return res.status(201).json({ url, key, bucket, docType });
   } catch (err) {
-    if (err.code === "LIMIT_FILE_SIZE") {
-      return res
-        .status(413)
-        .send({ error: "File too large. Max size is 5MB." });
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).send({ error: 'File too large. Max size is 5MB.' });
     }
-    return res.status(400).json({ error: err.message || "Upload failed" });
+    return res.status(400).json({ error: err.message || 'Upload failed' });
   }
 }

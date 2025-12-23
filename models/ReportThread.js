@@ -1,21 +1,21 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-const REPORT_STATUS = ["OPEN", "IN_PROGRESS", "CLOSED"];
+const REPORT_STATUS = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
 
 const ReportThreadSchema = new Schema(
   {
     houseId: {
       type: Schema.Types.ObjectId,
-      ref: "House",
+      ref: 'House',
       required: true,
       index: true,
     },
 
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
       index: true,
     },
@@ -36,7 +36,7 @@ const ReportThreadSchema = new Schema(
     status: {
       type: String,
       enum: REPORT_STATUS,
-      default: "OPEN",
+      default: 'OPEN',
       index: true,
     },
   },
@@ -47,4 +47,4 @@ const ReportThreadSchema = new Schema(
 
 ReportThreadSchema.index({ houseId: 1, createdAt: -1 });
 
-export default mongoose.model("ReportThread", ReportThreadSchema);
+export default mongoose.model('ReportThread', ReportThreadSchema);
