@@ -16,8 +16,7 @@ export const generateToken = async (req, res) => {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000);
 
-    // TODO: Placeholder ObjectId, change when authentication is implemented
-    const createdBy = req.user?.id || new mongoose.Types.ObjectId('000000000000000000000000');
+    const createdBy = req.user.id;
 
     const registrationToken = new RegistrationToken({
       token,
