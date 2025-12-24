@@ -1,6 +1,6 @@
 import EmployeeProfile from '../models/EmployeeProfile.js';
 import OPTDocument from '../models/OPTDocument.js';
-import { uploadToS3 } from '../config/aws.js';
+import { uploadToS3, getPresignedGetUrl } from '../config/aws.js';
 
 function extFromMimetype(mimi) {
   if (mimi === 'image/jpeg') return 'jpg';
@@ -109,5 +109,57 @@ export async function uploadFile(req, res) {
       return res.status(413).send({ error: 'File too large. Max size is 5MB.' });
     }
     return res.status(400).json({ error: err.message || 'Upload failed' });
+  }
+}
+
+export async function getPresignedPreviewUrl(req, res) {
+  try {
+    const userId = req.user?.id; // from auth middleware
+    if (!userId) return res.status(401).json({ error: 'Unauthenticated' });
+
+    const docType = (req.query.docType || '').toLowerCase().trim();
+    if (!docType) {
+      return res.status(400).json({ error: 'Invalid or missing docType' });
+    }
+
+    let key = null;
+
+    if (docType === 'driver_license' || docType === 'profile_picture') {
+      const profile = await EmployeeProfile.findOne({ userId });
+      if (!profile)
+        return res.status(404).json({ error: 'EmployeeProfile not found for this userId' });
+
+      if (docType === 'driver_license') {
+        key = profile.driverLicenseDocKey;
+      } else if (docType === 'profile_picture') {
+        key = profile.profilePictureKey;
+      }
+    } else {
+      const map = {
+        opt_receipt: 'RECEIPT',
+        opt_ead: 'EAD',
+        i983: 'I-983',
+        i20: 'I-20',
+      };
+      const documentType = map[docType];
+      if (!documentType) {
+        return res.status(400).json({ error: 'Invalid docType' });
+      }
+      const doc = await OPTDocument.findOne({ userId, documentType }).lean();
+      if (!doc?.documentKey) return res.status(404).json({ error: 'Document not found' });
+      key = doc.documentKey;
+    }
+    if (!key) return res.status(404).json({ error: 'No document key found' });
+
+    const url = await getPresignedGetUrl({
+      key,
+      expiresInSeconds: 60 * 10, // 10 minutes
+      // inline makes the browser display the file inline (e.g. image in a new tab)
+      responseContentDisposition: `inline"`,
+    });
+
+    return res.json({ url, key });
+  } catch (err) {
+    return res.status(400).json({ error: err.message || 'Failed to generate preview URL' });
   }
 }

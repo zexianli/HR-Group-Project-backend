@@ -1,5 +1,6 @@
-import { S3Client } from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /**
  * Validate required AWS environment variables.
@@ -67,4 +68,29 @@ export async function uploadToS3({ body, key, contentType }) {
     key,
     url,
   };
+}
+
+/**
+ * Generate a presigned URL for downloading a file from S3
+ * @param {Object} params
+ * @param {string} params.key - S3 object key, e.g. "users/1234567890/profile.jpg"
+ * @param {number} [params.expiresInSeconds] - number of seconds until the URL expires (default: 600)
+ * @param {string} [params.responseContentDisposition] - response content disposition (default: "inline")
+ */
+export async function getPresignedGetUrl({
+  key,
+  expiresInSeconds = 600,
+  responseContentDisposition = 'inline', // default to inline for display in browser
+}) {
+  if (!key) throw new Error('getPresignedGetUrl: Missing key');
+
+  const s3 = getS3Client();
+
+  const cmd = new GetObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET,
+    Key: key,
+    ResponseContentDisposition: responseContentDisposition,
+  });
+
+  return await getSignedUrl(s3, cmd, { expiresIn: expiresInSeconds });
 }
