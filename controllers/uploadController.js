@@ -155,7 +155,7 @@ export async function getPresignedPreviewUrl(req, res) {
       key,
       expiresInSeconds: 60 * 10, // 10 minutes
       // inline makes the browser display the file inline (e.g. image in a new tab)
-      responseContentDisposition: `inline"`,
+      responseContentDisposition: 'inline',
     });
 
     return res.json({ url, key });
