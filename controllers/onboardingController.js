@@ -11,7 +11,7 @@ function ymdToUTCDate(ymd) {
 
 export async function submitOnboarding(req, res) {
   try {
-    const userId = req.userId; // from tempAuth middleware
+    const userId = req.user?.id; // from auth middleware
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ error: 'Invalid user ID' });
     }

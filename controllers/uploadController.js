@@ -25,7 +25,9 @@ export async function uploadFile(req, res) {
       return res.status(400).json({ error: 'Invalid or missing docType' });
     }
 
-    const userId = req.userId; // from auth middleware
+    const userId = req.user?.id; // from auth middleware
+    if (!userId) return res.status(401).json({ error: 'Unauthenticated' });
+
     const ext = extFromMimetype(req.file.mimetype);
 
     // overwrite keys
@@ -89,11 +91,10 @@ export async function uploadFile(req, res) {
 
       const documentType = map[docType];
       await OPTDocument.updateOne(
-        { _id: `${userId}:${documentType}` },
+        { userId, documentType },
         {
           $set: {
-            _id: `${userId}:${documentType}`,
-            employeeId: String(userId),
+            userId,
             documentType,
             documentKey: key,
           },

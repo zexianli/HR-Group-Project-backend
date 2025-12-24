@@ -90,7 +90,9 @@ export const register = async (req, res) => {
     const validationResult = registerSchema.safeParse(req.body);
 
     if (!validationResult.success) {
-      const errors = validationResult.error.errors.map((err) => err.message);
+      const issues = validationResult.error?.issues ?? validationResult.error?.errors ?? [];
+      const errors = issues.map((i) => i.message);
+
       await session.abortTransaction();
       return res.status(400).json({
         message: errors[0],
@@ -240,7 +242,9 @@ export const register = async (req, res) => {
     console.error('Registration error:', error);
 
     if (error instanceof z.ZodError) {
-      const errors = error.errors.map((err) => err.message);
+      const issues = error.issues ?? error.errors ?? [];
+      const errors = issues.map((i) => i.message);
+
       return res.status(400).json({
         message: errors[0],
         errors: errors,
