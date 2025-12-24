@@ -29,13 +29,17 @@ export const getAssignedHouse = async (req, res) => {
 
     const roommates = await EmployeeProfile.find({
       houseId: employeeProfile.houseId,
-    }).select('firstName lastName cellPhone');
+    })
+      .populate('userId', 'onboardingStatus')
+      .select('firstName lastName cellPhone userId');
 
-    const roommatesData = roommates.map((roommate) => ({
-      firstName: roommate.firstName,
-      lastName: roommate.lastName,
-      phone: roommate.cellPhone,
-    }));
+    const roommatesData = roommates
+      .filter((roommate) => roommate.userId?.onboardingStatus === 'APPROVED')
+      .map((roommate) => ({
+        firstName: roommate.firstName,
+        lastName: roommate.lastName,
+        phone: roommate.cellPhone,
+      }));
 
     return res.status(200).json({
       message: 'House retrieved successfully',
