@@ -25,9 +25,14 @@ const OPTDocumentSchema = new mongoose.Schema(
       index: true,
     },
 
-    fileUrl: {
+    /**
+     * S3 object key
+     * Example: users/{userId}/opt/receipt_v2.pdf
+     */
+    documentKey: {
       type: String,
-      required: true, // S3 URL
+      required: true,
+      trim: true,
     },
 
     status: {
@@ -36,6 +41,15 @@ const OPTDocumentSchema = new mongoose.Schema(
       default: "PENDING",
       required: true,
       index: true,
+    },
+
+    /**
+     * Incremented on each resubmission
+     * version = 1, 2, 3...
+     */
+    version: {
+      type: Number,
+      default: 1,
     },
 
     feedback: {
@@ -53,28 +67,16 @@ const OPTDocumentSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-
-    version: {
-      type: Number,
-      default: 1,
-    },
-
-    isLatest: {
-      type: Boolean,
-      default: true,
-      index: true,
-    },
-
-    uploadedAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   { timestamps: true }
 );
 
+/**
+ * Ensure uniqueness per submission version
+ * Same user + same document type + same version cannot exist twice
+ */
 OPTDocumentSchema.index(
-  { userId: 1, documentType: 1, isLatest: 1 },
+  { userId: 1, documentType: 1, version: 1 },
   { unique: true }
 );
 
