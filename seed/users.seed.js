@@ -20,6 +20,7 @@ export const seedUsers = async () => {
         email: 'testemployee@domain.com',
         passwordHash: await bcrypt.hash('@TestemployeePW123', 10),
         role: 'EMPLOYEE',
+        onboardingStatus: 'APPROVED',
       },
     ]);
 
