@@ -6,7 +6,7 @@ const CommentSchema = new Schema(
   {
     reportId: {
       type: Schema.Types.ObjectId,
-      ref: 'ReportThread',
+      ref: "ReportThread",
       required: true,
       index: true,
     },
@@ -20,7 +20,7 @@ const CommentSchema = new Schema(
 
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
       index: true,
     },
@@ -32,4 +32,4 @@ const CommentSchema = new Schema(
 
 CommentSchema.index({ reportId: 1, createdAt: 1 });
 
-export default mongoose.model('Comment', CommentSchema);
+export default mongoose.model("Comment", CommentSchema);
