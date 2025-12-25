@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadFile } from '../controllers/uploadController.js';
+import { uploadFile, getPresignedPreviewUrl } from '../controllers/uploadController.js';
 import { authenticate, employeeOnly } from '../middlewares/auth.js';
 
 const router = Router();
@@ -18,5 +18,6 @@ const upload = multer({
 });
 
 router.post('/upload', authenticate, employeeOnly, upload.single('file'), uploadFile);
+router.get('/preview-url', authenticate, getPresignedPreviewUrl);
 
 export default router;
