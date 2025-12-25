@@ -5,12 +5,14 @@ import {
   createFacilityReport,
   addCommentToReport,
   updateReportComment,
+  getReportComments,
 } from '../controllers/houseController.js';
 
 const router = express.Router();
 
 router.get('/housing/me', authenticate, employeeOnly, getAssignedHouse);
 router.post('/housing/reports', authenticate, employeeOnly, createFacilityReport);
+router.get('/housing/reports/:id/comments', authenticate, getReportComments);
 router.post('/housing/reports/:id/comments', authenticate, addCommentToReport);
 router.put('/housing/reports/:id/comments/:commentId', authenticate, updateReportComment);
 

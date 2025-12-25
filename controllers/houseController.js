@@ -283,3 +283,53 @@ export const updateReportComment = async (req, res) => {
     });
   }
 };
+
+export const getReportComments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const reportId = req.params.id;
+
+    const report = await ReportThread.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({
+        message: 'Facility report not found',
+      });
+    }
+
+    const isReportCreator = report.createdBy.toString() === userId;
+    const isHR = userRole === 'HR';
+
+    if (!isReportCreator && !isHR) {
+      return res.status(403).json({
+        message: 'Access denied. Only the report creator or HR can view comments',
+      });
+    }
+
+    const comments = await Comment.find({ reportId })
+      .populate('createdBy', 'username')
+      .sort({ createdAt: 1 });
+
+    return res.status(200).json({
+      message: 'Comments retrieved successfully',
+      data: comments.map((comment) => ({
+        id: comment._id,
+        reportId: comment.reportId,
+        message: comment.message,
+        createdBy: {
+          id: comment.createdBy._id,
+          username: comment.createdBy.username,
+        },
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error('Error fetching report comments:', error);
+    return res.status(500).json({
+      message: 'An error occurred while fetching comments',
+      error: error.message,
+    });
+  }
+};
