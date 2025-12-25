@@ -2,6 +2,7 @@ import { z } from 'zod';
 import EmployeeProfile from '../models/EmployeeProfile.js';
 import House from '../models/House.js';
 import ReportThread from '../models/ReportThread.js';
+import Comment from '../models/comment.js';
 
 const createReportSchema = z.object({
   title: z
@@ -10,6 +11,14 @@ const createReportSchema = z.object({
     .max(200, 'Title must be at most 200 characters')
     .trim(),
   description: z.string().min(1, 'Description is required').trim(),
+});
+
+const createCommentSchema = z.object({
+  description: z
+    .string()
+    .min(1, 'Description is required')
+    .max(2000, 'Description must be at most 2000 characters')
+    .trim(),
 });
 
 export const getAssignedHouse = async (req, res) => {
@@ -112,7 +121,6 @@ export const createFacilityReport = async (req, res) => {
     const house = await House.findById(employeeProfile.houseId);
     if (!house) return res.status(404).json({ message: 'Assigned house not found' });
 
-
     const report = new ReportThread({
       houseId: employeeProfile.houseId,
       createdBy: userId,
@@ -141,6 +149,137 @@ export const createFacilityReport = async (req, res) => {
     return res.status(500).json({
       message: 'An error occurred while creating the facility report',
       error: error.message,
+    });
+  }
+};
+
+export const addCommentToReport = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const reportId = req.params.id;
+
+    const validationResult = createCommentSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      const issues = validationResult.error?.issues ?? validationResult.error?.errors ?? [];
+      const errors = issues.map((i) => i.message);
+
+      return res.status(400).json({
+        message: errors[0],
+        errors: errors,
+      });
+    }
+
+    const { description } = validationResult.data;
+
+    const report = await ReportThread.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({
+        message: 'Facility report not found',
+      });
+    }
+
+    const isReportCreator = report.createdBy.toString() === userId;
+    const isHR = userRole === 'HR';
+
+    if (!isReportCreator && !isHR) {
+      return res.status(403).json({
+        message: 'Access denied. Only the report creator or HR can comment on this report',
+      });
+    }
+
+    const comment = new Comment({
+      reportId: reportId,
+      message: description,
+      createdBy: userId,
+    });
+
+    await comment.save();
+
+    return res.status(201).json({
+      message: 'Comment added successfully',
+      data: {
+        id: comment._id,
+        reportId: comment.reportId,
+        message: comment.message,
+        createdAt: comment.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error adding comment to report:', error);
+    return res.status(500).json({
+      message: 'An error occurred while adding the comment',
+      error: error.message,
+    });
+  }
+};
+
+export const updateReportComment = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const reportId = req.params.id;
+    const commentId = req.params.commentId;
+
+    const validationResult = createCommentSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const issues = validationResult.error?.issues ?? validationResult.error?.errors ?? [];
+      const errors = issues.map((i) => i.message);
+
+      return res.status(400).json({
+        message: errors[0],
+        errors: errors,
+      });
+    }
+    const { description } = validationResult.data;
+    const report = await ReportThread.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({
+        message: 'Facility report not found',
+      });
+    }
+
+    const isReportCreator = report.createdBy.toString() === userId;
+    const isHR = userRole === 'HR';
+
+    if (!isReportCreator && !isHR) {
+      return res.status(403).json({
+        message: 'Access denied. Only the report creator or HR can update this comment',
+      });
+    }
+
+    const comment = await Comment.findOne({ _id: commentId, reportId: reportId });
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+    const isCommentCreator = comment?.createdBy.toString() === userId;
+    if (!isCommentCreator && !isHR) {
+      return res.status(403).json({
+        message: 'Access denied. Only the comment creator or HR can update this comment',
+      });
+    }
+
+    comment.message = description;
+    await comment.save();
+
+    return res.status(200).json({
+      message: 'Comment updated successfully',
+      data: {
+        id: comment._id,
+        reportId: comment.reportId,
+        message: comment.message,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+      },
+    });
+  } catch (err) {
+    console.error('Error updating report comment:', err);
+    return res.status(500).json({
+      message: 'An error occurred while updating the comment',
+      error: err.message,
     });
   }
 };
