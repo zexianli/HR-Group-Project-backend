@@ -109,6 +109,10 @@ export const createFacilityReport = async (req, res) => {
       });
     }
 
+    const house = await House.findById(employeeProfile.houseId);
+    if (!house) return res.status(404).json({ message: 'Assigned house not found' });
+
+
     const report = new ReportThread({
       houseId: employeeProfile.houseId,
       createdBy: userId,
