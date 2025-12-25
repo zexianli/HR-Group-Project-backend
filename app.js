@@ -4,6 +4,7 @@ import tokenRoutes from './routes/tokenRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
+import hrOnboardingRoutes from './routes/hrOnboardingRoutes.js';
 import houseRoutes from './routes/houseRoutes.js';
 import cors from 'cors';
 
@@ -17,6 +18,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tokens', tokenRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', onboardingRoutes);
+app.use('/api/hr', hrOnboardingRoutes);
 app.use('/api', houseRoutes);
 
 app.use('/api', (req, res) => {

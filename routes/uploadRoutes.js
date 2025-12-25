@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import multer from 'multer';
-// import { employeeOnly } from '../middlewares/tempAuth.js';
 import { uploadFile } from '../controllers/uploadController.js';
 import { authenticate, employeeOnly } from '../middlewares/auth.js';
 
@@ -18,13 +17,6 @@ const upload = multer({
   },
 });
 
-
-router.post(
-  '/upload',
-  authenticate,
-  employeeOnly,
-  upload.single('file'),
-  uploadFile
-);
+router.post('/upload', authenticate, employeeOnly, upload.single('file'), uploadFile);
 
 export default router;
