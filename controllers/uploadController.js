@@ -9,11 +9,30 @@ function extFromMimetype(mimi) {
   return 'bin';
 }
 
+export const DOC_ORDER = ['OPT_RECEIPT', 'OPT_EAD', 'I_983', 'I_20'];
+
+async function getNextAllowedDocType(userId) {
+  const docs = await OPTDocument.find({ userId }).lean();
+  const statusByType = new Map();
+
+  // build a map of documentType -> status
+  for (const doc of docs) {
+    statusByType.set(doc.documentType, doc.status);
+  }
+
+  for (const t of DOC_ORDER) {
+    const status = statusByType.get(t);
+    if (status !== 'APPROVED') {
+      return t;
+    }
+  }
+  return null; // all approved
+}
 /**
  * Expected multipart from-data:
  * - file: (pdf/jpg/png, <= 5MB)
  * - docType: one of:
- *      profile_picture | driver_license | opt_receipt | opt_ead | i983 | i20
+ *      profile_picture | driver_license | opt_RECEIPT | opt_ead | i983 | i20
  */
 export async function uploadFile(req, res) {
   try {
@@ -83,13 +102,28 @@ export async function uploadFile(req, res) {
       }
     } else {
       const map = {
-        opt_receipt: 'RECEIPT',
-        opt_ead: 'EAD',
-        i983: 'I-983',
-        i20: 'I-20',
+        opt_receipt: 'OPT_RECEIPT',
+        opt_ead: 'OPT_EAD',
+        i983: 'I_983',
+        i20: 'I_20',
       };
 
       const documentType = map[docType];
+      if (!documentType) {
+        return res.status(400).json({ error: 'Invalid docType' });
+      }
+
+      const nextAllowed = await getNextAllowedDocType(userId);
+      if (!nextAllowed) {
+        return res.status(400).json({ error: 'All OPT documents have been approved already' });
+      }
+      if (documentType !== nextAllowed) {
+        return res.status(400).json({
+          error: `You must have ${nextAllowed} APPROVED before uploading ${documentType}.`,
+          nextAllowed,
+        });
+      }
+
       await OPTDocument.updateOne(
         { userId, documentType },
         {
@@ -97,6 +131,8 @@ export async function uploadFile(req, res) {
             userId,
             documentType,
             documentKey: key,
+            status: 'PENDING',
+            feedback: null,
           },
         },
         { upsert: true }
@@ -136,10 +172,10 @@ export async function getPresignedPreviewUrl(req, res) {
       }
     } else {
       const map = {
-        opt_receipt: 'RECEIPT',
-        opt_ead: 'EAD',
-        i983: 'I-983',
-        i20: 'I-20',
+        opt_receipt: 'OPT_RECEIPT',
+        opt_ead: 'OPT_EAD',
+        i983: 'I_983',
+        i20: 'I_20',
       };
       const documentType = map[docType];
       if (!documentType) {
