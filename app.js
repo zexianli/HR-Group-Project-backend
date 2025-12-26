@@ -19,7 +19,7 @@ app.use('/api/tokens', tokenRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', onboardingRoutes);
 app.use('/api/hr', hrOnboardingRoutes);
-app.use('/api', houseRoutes);
+app.use('/api/housing', houseRoutes);
 
 app.use('/api', (req, res) => {
   res.status(200).json({ message: 'Hello world' });
