@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js';
 import onboardingRoutes from './routes/onboardingRoutes.js';
 import hrOnboardingRoutes from './routes/hrOnboardingRoutes.js';
 import houseRoutes from './routes/houseRoutes.js';
+import employeeVisaRoutes from './routes/employeeVisaRoutes.js';
 import cors from 'cors';
 
 const app = express();
@@ -20,6 +21,7 @@ app.use('/api', uploadRoutes);
 app.use('/api', onboardingRoutes);
 app.use('/api/hr', hrOnboardingRoutes);
 app.use('/api', houseRoutes);
+app.use('/api/employee/visa', employeeVisaRoutes);
 
 app.use('/api', (req, res) => {
   res.status(200).json({ message: 'Hello world' });

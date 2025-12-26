@@ -9,6 +9,25 @@ function extFromMimetype(mimi) {
   return 'bin';
 }
 
+const DOC_ORDER = ['RECEIPT', 'EAD', 'I-983', 'I-20'];
+
+async function getNextAllowedDocType(userId) {
+  const docs = await OPTDocument.find({ userId }).lean();
+  const statusByType = new Map();
+
+  // build a map of documentType -> status
+  for (const doc of docs) {
+    statusByType.set(doc.documentType, doc.status);
+  }
+
+  for (const t of DOC_ORDER) {
+    const status = statusByType.get(t);
+    if (status !== 'APPROVED') {
+      return t;
+    }
+  }
+  return null; // all approved
+}
 /**
  * Expected multipart from-data:
  * - file: (pdf/jpg/png, <= 5MB)
@@ -90,6 +109,21 @@ export async function uploadFile(req, res) {
       };
 
       const documentType = map[docType];
+      if (!documentType) {
+        return res.status(400).json({ error: 'Invalid docType' });
+      }
+
+      const nextAllowed = await getNextAllowedDocType(userId);
+      if (!nextAllowed) {
+        return res.status(400).json({ error: 'All OPT documents have been approved already' });
+      }
+      if (documentType !== nextAllowed) {
+        return res.status(400).json({
+          error: `You must have ${nextAllowed} APPROVED before uploading ${documentType}.`,
+          nextAllowed,
+        });
+      }
+
       await OPTDocument.updateOne(
         { userId, documentType },
         {
@@ -97,6 +131,8 @@ export async function uploadFile(req, res) {
             userId,
             documentType,
             documentKey: key,
+            status: 'PENDING',
+            feedback: null,
           },
         },
         { upsert: true }
