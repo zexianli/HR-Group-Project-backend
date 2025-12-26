@@ -20,7 +20,6 @@ app.use('/api/tokens', tokenRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/hr', hrOnboardingRoutes);
-app.use('/api', houseRoutes);
 app.use('/api/employee/visa', employeeVisaRoutes);
 app.use('/api/housing', houseRoutes);
 

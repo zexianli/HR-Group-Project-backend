@@ -1,7 +1,7 @@
 import OPTDocument from '../models/OPTDocument.js';
 import { getPresignedGetUrl } from '../config/aws.js';
+import { DOC_ORDER } from './uploadController.js';
 
-const DOC_ORDER = ['RECEIPT', 'EAD', 'I-983', 'I-20'];
 const I983_EMPTY_KEY = 'templates/i983-empty.pdf';
 const I983_SAMPLE_KEY = 'templates/i983-sample.pdf';
 
@@ -70,7 +70,7 @@ function computeStatusPayload(docMap) {
   };
 }
 
-export async function getVisaStatus(req, res, next) {
+export async function getVisaStatus(req, res) {
   try {
     const userId = req.user.id;
     const docs = await OPTDocument.find({ userId }).lean();
@@ -78,16 +78,20 @@ export async function getVisaStatus(req, res, next) {
 
     const payload = computeStatusPayload(docMap);
 
-    res.json({
+    res.status(200).json({
       isOptCase: true,
       ...payload,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Error fetching visa status:', error);
+    return res.status(500).json({
+      message: 'An error occurred while fetching visa status',
+      error: error.message,
+    });
   }
 }
 
-export async function getI983Templates(req, res, next) {
+export async function getI983Templates(req, res) {
   try {
     const emptyTemplateUrl = await getPresignedGetUrl({
       key: I983_EMPTY_KEY,
@@ -105,7 +109,10 @@ export async function getI983Templates(req, res, next) {
       emptyTemplateUrl,
       sampleTemplateUrl,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return res.status(500).json({
+      message: 'An error occurred while returning I983 Template',
+      error: error.message,
+    });
   }
 }
