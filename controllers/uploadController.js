@@ -9,7 +9,7 @@ function extFromMimetype(mimi) {
   return 'bin';
 }
 
-const DOC_ORDER = ['OPT_RECEIPT', 'OPT_EAD', 'I_983', 'I_20'];
+export const DOC_ORDER = ['OPT_RECEIPT', 'OPT_EAD', 'I_983', 'I_20'];
 
 async function getNextAllowedDocType(userId) {
   const docs = await OPTDocument.find({ userId }).lean();

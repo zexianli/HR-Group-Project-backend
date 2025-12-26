@@ -1,6 +1,5 @@
 import OPTDocument from '../models/OPTDocument.js';
-
-const DOC_ORDER = ['RECEIPT', 'EAD', 'I-983', 'I-20'];
+import { DOC_ORDER } from './uploadController.js';
 
 function buildDocMap(docs) {
   const map = new Map();
