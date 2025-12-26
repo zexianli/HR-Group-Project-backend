@@ -284,6 +284,53 @@ export const updateReportComment = async (req, res) => {
   }
 };
 
+export const getUserHouseReports = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const employeeProfile = await EmployeeProfile.findOne({ userId });
+
+    if (!employeeProfile) {
+      return res.status(404).json({
+        message: 'Employee profile not found',
+      });
+    }
+
+    if (!employeeProfile.houseId) {
+      return res.status(404).json({
+        message: 'No house assigned to this employee',
+      });
+    }
+
+    const reports = await ReportThread.find({ houseId: employeeProfile.houseId })
+      .populate('createdBy', 'username')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: 'Reports retrieved successfully',
+      data: reports.map((report) => ({
+        id: report._id,
+        houseId: report.houseId,
+        title: report.title,
+        description: report.description,
+        status: report.status,
+        createdBy: {
+          id: report.createdBy._id,
+          username: report.createdBy.username,
+        },
+        createdAt: report.createdAt,
+        updatedAt: report.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error('Error fetching house reports:', error);
+    return res.status(500).json({
+      message: 'An error occurred while fetching reports',
+      error: error.message,
+    });
+  }
+};
+
 export const getReportComments = async (req, res) => {
   try {
     const userId = req.user.id;
