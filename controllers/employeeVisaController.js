@@ -1,6 +1,9 @@
 import OPTDocument from '../models/OPTDocument.js';
+import { getPresignedGetUrl } from '../config/aws.js';
 
 const DOC_ORDER = ['RECEIPT', 'EAD', 'I-983', 'I-20'];
+const I983_EMPTY_KEY = 'templates/i983-empty.pdf';
+const I983_SAMPLE_KEY = 'templates/i983-sample.pdf';
 
 function buildDocMap(docs) {
   const map = new Map();
@@ -78,6 +81,29 @@ export async function getVisaStatus(req, res, next) {
     res.json({
       isOptCase: true,
       ...payload,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getI983Templates(req, res, next) {
+  try {
+    const emptyTemplateUrl = await getPresignedGetUrl({
+      key: I983_EMPTY_KEY,
+      expiresInSeconds: 60 * 10,
+      responseContentDisposition: 'attachment; filename="I-983_Empty_Template.pdf"',
+    });
+
+    const sampleTemplateUrl = await getPresignedGetUrl({
+      key: I983_SAMPLE_KEY,
+      expiresInSeconds: 60 * 10,
+      responseContentDisposition: 'attachment; filename="I-983_Sample_Template.pdf"',
+    });
+
+    return res.json({
+      emptyTemplateUrl,
+      sampleTemplateUrl,
     });
   } catch (err) {
     next(err);
