@@ -1,5 +1,9 @@
 import OPTDocument from '../models/OPTDocument.js';
+import { getPresignedGetUrl } from '../config/aws.js';
 import { DOC_ORDER } from './uploadController.js';
+
+const I983_EMPTY_KEY = 'templates/i983-empty.pdf';
+const I983_SAMPLE_KEY = 'templates/i983-sample.pdf';
 
 function buildDocMap(docs) {
   const map = new Map();
@@ -82,6 +86,32 @@ export async function getVisaStatus(req, res) {
     console.error('Error fetching visa status:', error);
     return res.status(500).json({
       message: 'An error occurred while fetching visa status',
+      error: error.message,
+    });
+  }
+}
+
+export async function getI983Templates(req, res) {
+  try {
+    const emptyTemplateUrl = await getPresignedGetUrl({
+      key: I983_EMPTY_KEY,
+      expiresInSeconds: 60 * 10,
+      responseContentDisposition: 'attachment; filename="I-983_Empty_Template.pdf"',
+    });
+
+    const sampleTemplateUrl = await getPresignedGetUrl({
+      key: I983_SAMPLE_KEY,
+      expiresInSeconds: 60 * 10,
+      responseContentDisposition: 'attachment; filename="I-983_Sample_Template.pdf"',
+    });
+
+    return res.json({
+      emptyTemplateUrl,
+      sampleTemplateUrl,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'An error occurred while returning I983 Template',
       error: error.message,
     });
   }
