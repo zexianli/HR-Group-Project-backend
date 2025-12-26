@@ -9,7 +9,7 @@ function extFromMimetype(mimi) {
   return 'bin';
 }
 
-const DOC_ORDER = ['RECEIPT', 'EAD', 'I-983', 'I-20'];
+const DOC_ORDER = ['OPT_RECEIPT', 'OPT_EAD', 'I_983', 'I_20'];
 
 async function getNextAllowedDocType(userId) {
   const docs = await OPTDocument.find({ userId }).lean();
@@ -32,7 +32,7 @@ async function getNextAllowedDocType(userId) {
  * Expected multipart from-data:
  * - file: (pdf/jpg/png, <= 5MB)
  * - docType: one of:
- *      profile_picture | driver_license | opt_receipt | opt_ead | i983 | i20
+ *      profile_picture | driver_license | opt_RECEIPT | opt_ead | i983 | i20
  */
 export async function uploadFile(req, res) {
   try {
@@ -102,10 +102,10 @@ export async function uploadFile(req, res) {
       }
     } else {
       const map = {
-        opt_receipt: 'RECEIPT',
-        opt_ead: 'EAD',
-        i983: 'I-983',
-        i20: 'I-20',
+        opt_receipt: 'OPT_RECEIPT',
+        opt_ead: 'OPT_EAD',
+        i983: 'I_983',
+        i20: 'I_20',
       };
 
       const documentType = map[docType];
@@ -172,10 +172,10 @@ export async function getPresignedPreviewUrl(req, res) {
       }
     } else {
       const map = {
-        opt_receipt: 'RECEIPT',
-        opt_ead: 'EAD',
-        i983: 'I-983',
-        i20: 'I-20',
+        opt_receipt: 'OPT_RECEIPT',
+        opt_ead: 'OPT_EAD',
+        i983: 'I_983',
+        i20: 'I_20',
       };
       const documentType = map[docType];
       if (!documentType) {
