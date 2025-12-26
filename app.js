@@ -22,6 +22,7 @@ app.use('/api', onboardingRoutes);
 app.use('/api/hr', hrOnboardingRoutes);
 app.use('/api', houseRoutes);
 app.use('/api/employee/visa', employeeVisaRoutes);
+app.use('/api/housing', houseRoutes);
 
 app.use('/api', (req, res) => {
   res.status(200).json({ message: 'Hello world' });
