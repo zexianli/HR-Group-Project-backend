@@ -67,7 +67,7 @@ function computeStatusPayload(docMap) {
   };
 }
 
-export async function getVisaStatus(req, res, next) {
+export async function getVisaStatus(req, res) {
   try {
     const userId = req.user.id;
     const docs = await OPTDocument.find({ userId }).lean();
@@ -75,11 +75,15 @@ export async function getVisaStatus(req, res, next) {
 
     const payload = computeStatusPayload(docMap);
 
-    res.json({
+    res.status(200).json({
       isOptCase: true,
       ...payload,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Error fetching visa status:', error);
+    return res.status(500).json({
+      message: 'An error occurred while fetching visa status',
+      error: error.message,
+    });
   }
 }
