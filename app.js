@@ -18,7 +18,7 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api/tokens', tokenRoutes);
 app.use('/api', uploadRoutes);
-app.use('/api', onboardingRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/hr', hrOnboardingRoutes);
 app.use('/api', houseRoutes);
 app.use('/api/employee/visa', employeeVisaRoutes);
