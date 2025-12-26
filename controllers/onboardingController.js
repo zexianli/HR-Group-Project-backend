@@ -9,6 +9,87 @@ function ymdToUTCDate(ymd) {
   return new Date(`${ymd}T00:00:00.000Z`);
 }
 
+/**
+ * GET /api/onboarding
+ * Employee only
+ */
+export async function getOnboardingApplication(req, res) {
+  try {
+    const userId = req.user.id;
+
+    const [profile, onboarding] = await Promise.all([
+      EmployeeProfile.findOne({ userId }),
+      OnboardingApplication.findOne({ userId }),
+    ]);
+
+    if (!profile || !onboarding) {
+      return res.status(404).json({
+        error: 'Onboarding information not found',
+      });
+    }
+
+    return res.status(200).json({
+      employeeProfile: profile,
+      onboarding: {
+        status: onboarding.status,
+        feedback: onboarding.feedback,
+      },
+    });
+  } catch (err) {
+    console.error('getOnboardingApplication error:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+/**
+ * PUT /api/onboarding
+ * Only allowed when status === REJECTED
+ */
+export async function updateRejectedOnboarding(req, res) {
+  try {
+    const userId = req.user.id;
+    const data = req.validatedBody; // reuse validateOnboarding
+
+    const onboarding = await OnboardingApplication.findOne({ userId });
+
+    if (!onboarding) {
+      return res.status(404).json({
+        error: 'Onboarding application not found',
+      });
+    }
+
+    if (onboarding.status !== 'REJECTED') {
+      return res.status(403).json({
+        error: 'Onboarding can only be updated when status is REJECTED',
+      });
+    }
+
+    // Update employee profile
+    await EmployeeProfile.findOneAndUpdate(
+      { userId },
+      data,
+      { new: true, runValidators: true }
+    );
+
+    // Update onboarding workflow
+    onboarding.status = 'PENDING';
+    onboarding.feedback = '';
+    onboarding.snapshot = data;
+    onboarding.submittedAt = new Date();
+
+    await onboarding.save();
+
+    return res.status(200).json({
+      message: 'Onboarding application resubmitted successfully',
+      onboardingStatus: 'PENDING',
+    });
+  } catch (err) {
+    console.error('updateRejectedOnboarding error:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+
 export async function submitOnboarding(req, res) {
   try {
     const userId = req.user?.id; // from auth middleware
