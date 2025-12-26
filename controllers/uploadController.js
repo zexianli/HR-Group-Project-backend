@@ -32,7 +32,7 @@ async function getNextAllowedDocType(userId) {
  * Expected multipart from-data:
  * - file: (pdf/jpg/png, <= 5MB)
  * - docType: one of:
- *      profile_picture | driver_license | green_card | citizen | opt_RECEIPT | opt_ead | i983 | i20
+ *      profile_picture | driver_license | green_card | citizen | opt_receipt | opt_ead | i983 | i20
  */
 export async function uploadFile(req, res) {
   try {
@@ -87,6 +87,11 @@ export async function uploadFile(req, res) {
       key: s3Key,
       contentType: req.file.mimetype,
     });
+
+    if (docType === 'green_card' || docType === 'citizen') {
+      // no DB updates for these types
+      return res.status(201).json({ url, key, bucket, docType });
+    }
 
     if (docType === 'driver_license') {
       const r = await EmployeeProfile.updateOne(
