@@ -28,7 +28,7 @@ function computeNextStep(docMap) {
     const d = docMap.get(t);
     if (d?.status === 'PENDING') {
       return {
-        nextStep: `Waiting for HR`,
+        nextStep: `Waiting for HR approval: ${t}`,
         actionType: 'REVIEW_DOC',
         pendingDocument: {
           documentType: t,
@@ -64,7 +64,6 @@ export async function getPendingOptEmployees(req, res) {
       )
       .lean();
     if (!profiles.length) {
-      console.log('hi');
       return res.json({ employees: [] });
     }
     const userIds = profiles.map((p) => p.userId);
@@ -109,6 +108,89 @@ export async function getPendingOptEmployees(req, res) {
         pendingDocument: step.pendingDocument,
       });
     }
+
+    return res.json({ employees });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ error: err.message || 'Internal Server Error when getting Employees' });
+  }
+}
+
+export async function getAllVisaStatusEmployees(req, res) {
+  try {
+    const search = (req.query.search || '').trim();
+
+    // Build optional name filter
+    const nameFilter = search
+      ? {
+          $or: [
+            // case-insensitive
+            { firstName: { $regex: search, $options: 'i' } },
+            { lastName: { $regex: search, $options: 'i' } },
+            { preferredName: { $regex: search, $options: 'i' } },
+          ],
+        }
+      : {};
+
+    const profiles = await EmployeeProfile.find({
+      workAuthorizationType: 'F1_CPT_OPT',
+      ...nameFilter,
+    })
+      .select(
+        'userId firstName lastName preferredName workAuthorizationType workAuthorizationStart workAuthorizationEnd'
+      )
+      .lean();
+
+    if (!profiles.length) return res.json({ employees: [] });
+
+    const userIds = profiles.map((p) => p.userId);
+    const docs = await OPTDocument.find({ userId: { $in: userIds } }).lean();
+
+    const docsByUser = new Map();
+    for (const d of docs) {
+      const id = String(d.userId);
+      if (!docsByUser.has(id)) docsByUser.set(id, []);
+      docsByUser.get(id).push(d);
+    }
+
+    // Build Response
+    const employees = profiles.map((p) => {
+      const userKey = String(p.userId);
+      const userDocs = docsByUser.get(userKey) || [];
+
+      const docMap = new Map(userDocs.map((d) => [d.documentType, d]));
+      const nextStep = computeNextStep(docMap);
+
+      // All uploaded and approved docs
+      const approvedDocuments = userDocs
+        .filter((d) => d.status === 'APPROVED')
+        .map((d) => ({
+          documentType: d.documentType,
+          status: d.status,
+          documentKey: d.documentKey,
+          uoloadedAt: d.createdAt ?? null,
+          reviewedAt: d.updatedAt ?? null,
+        }));
+      return {
+        employeeId: p.userId,
+        name: {
+          firstName: p.firstName,
+          lastName: p.lastName,
+          preferredName: p.preferredName,
+          legalFullName: `${p.firstName} ${p.lastName}`,
+        },
+        workAuthorization: {
+          title: p.workAuthorizationType,
+          startDate: p.workAuthorizationStart,
+          endDate: p.workAuthorizationEnd,
+          daysRemaining: daysRemaining(p.workAuthorizationEnd),
+        },
+        nextStep,
+        approvedDocuments,
+      };
+    });
 
     return res.json({ employees });
   } catch (err) {
