@@ -57,7 +57,7 @@ const EmergencyContactSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const WORK_AUTH = ['CITIZEN', 'GREEN_CARD', 'H1B', 'L2', 'F1_CPT_OPT', 'H4', 'OTHER'];
+const WORK_AUTH = ['PENDING', 'CITIZEN', 'GREEN_CARD', 'H1B', 'L2', 'F1_CPT_OPT', 'H4', 'OTHER'];
 
 const GENDER = ['MALE', 'FEMALE', 'NO_ANSWER'];
 

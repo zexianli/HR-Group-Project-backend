@@ -8,4 +8,6 @@ router.use(authenticate, hrOnly);
 
 router.get('/pending', hrVisaCtrl.getPendingOptEmployees);
 
+router.get('/all', hrVisaCtrl.getAllVisaStatusEmployees);
+
 export default router;
