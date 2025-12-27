@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import mongoose from 'mongoose';
 import RegistrationToken from '../models/RegistrationToken.js';
 import { sendRegistrationEmail } from '../utils/emailService.js';
 
@@ -64,6 +63,36 @@ export const generateToken = async (req, res) => {
     return res.status(500).json({
       message: 'An error occurred while generating the token',
       error: error.message,
+    });
+  }
+};
+
+export const getTokenHistory = async (req, res) => {
+  try {
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const REGISTRATION_PATH = '/register';
+
+    const tokens = await RegistrationToken.find({})
+      .sort({ createdAt: -1 })
+      .select('email name token isUsed createdAt');
+
+    const data = tokens.map((t) => ({
+      email: t.email,
+      name: t.name,
+      link: `${FRONTEND_URL}${REGISTRATION_PATH}?token=${t.token}`,
+      isUsed: t.isUsed,
+      createdAt: t.createdAt,
+    }));
+
+    return res.status(200).json({
+      message: 'Registration token history retrieved successfully',
+      data,
+    });
+  } catch (err) {
+    console.error('Error getting token history:', err);
+    return res.status(500).json({
+      message: 'An error occurred while fetching token history',
+      error: err.message,
     });
   }
 };

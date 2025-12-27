@@ -10,8 +10,7 @@ async function ensureApprovedEmployee(userId) {
   const user = await User.findById(userId).select('onboardingStatus role isActive');
   if (!user) return { ok: false, status: 404, message: 'User not found' };
   if (!user.isActive) return { ok: false, status: 403, message: 'Account is inactive' };
-  if (user.role !== 'EMPLOYEE')
-    return { ok: false, status: 403, message: 'Employees only' };
+  if (user.role !== 'EMPLOYEE') return { ok: false, status: 403, message: 'Employees only' };
   if (user.onboardingStatus !== 'APPROVED')
     return { ok: false, status: 403, message: 'Only approved employees can access this resource' };
 
@@ -74,6 +73,20 @@ export async function updateMyEmployeeProfile(req, res) {
       'address',
       'cellPhone',
       'workPhone',
+
+      // Identity
+      'ssn',
+      'dateOfBirth',
+      'gender',
+
+      // Employment (work authorization)
+      'workAuthorizationType',
+      'otherWorkAuthorizationTitle',
+      'workAuthorizationStart',
+      'workAuthorizationEnd',
+
+      // Driver license info
+      'driverLicense',
 
       // Optional
       'carInformation',
