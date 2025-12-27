@@ -152,15 +152,15 @@ export const onboardingSchema = z
     }
 
     // Driver license present -> require doc key too
-    if (data.driverLicense) {
-      if (!data.driverLicenseDocKey?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['driverLicenseDocKey'],
-          message: 'driverLicenseDocKey is required when driverLicense is provided',
-        });
-      }
-    }
+    // if (data.driverLicense) {
+    //   if (!data.driverLicenseDocKey?.trim()) {
+    //     ctx.addIssue({
+    //       code: z.ZodIssueCode.custom,
+    //       path: ['driverLicenseDocKey'],
+    //       message: 'driverLicenseDocKey is required when driverLicense is provided',
+    //     });
+    //   }
+    // }
   });
 
 export function validateOnboarding(req, res, next) {
