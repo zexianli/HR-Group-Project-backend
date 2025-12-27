@@ -56,6 +56,32 @@ export const seedUsers = async () => {
         role: 'EMPLOYEE',
         onboardingStatus: 'APPROVED',
       },
+      // ============================================
+      // Onboarding test employees
+      // Employee 1: Pending onboarding
+      {
+        username: 'onboard_pending',
+        email: 'onboard.pending@domain.com',
+        passwordHash: await bcrypt.hash('@OnboardPending123', 10),
+        role: 'EMPLOYEE',
+        onboardingStatus: 'PENDING',
+      },
+      // Employee 2: Rejected onboarding
+      {
+        username: 'onboard_rejected',
+        email: 'onboard.rejected@domain.com',
+        passwordHash: await bcrypt.hash('@OnboardRejected123', 10),
+        role: 'EMPLOYEE',
+        onboardingStatus: 'REJECTED',
+      },
+      // Employee 3: Not started onboarding
+      {
+        username: 'onboard_notstarted',
+        email: 'onboard.notstarted@domain.com',
+        passwordHash: await bcrypt.hash('@OnboardNotstarted123', 10),
+        role: 'EMPLOYEE',
+        onboardingStatus: 'NOT_STARTED',
+      },
     ]);
 
     // process.exit(0);

@@ -12,6 +12,9 @@ export const seedEmployees = async (users) => {
     const optMidflow = users.find((u) => u.username === 'opt_midflow');
     const optRejected = users.find((u) => u.username === 'opt_rejected');
     const optStarter = users.find((u) => u.username === 'opt_starter');
+    const onboardPending = users.find((u) => u.username === 'onboard_pending');
+    const onboardRejected = users.find((u) => u.username === 'onboard_rejected');
+    const onboardNotstarted = users.find((u) => u.username === 'onboard_notstarted');
 
     if (!employeeUser) {
       throw new Error('Employee user not found');
@@ -162,6 +165,73 @@ export const seedEmployees = async (users) => {
             phone: '9990001111',
             email: 'david.starter@domain.com',
             relationship: 'Brother',
+          },
+        ],
+      },
+      // ============================================
+      // Onboarding test employees (non-approved states)
+      // Employee 1: PENDING onboarding - F1_CPT_OPT to test blocked visa access
+      // ============================================
+      {
+        userId: onboardPending._id,
+        firstName: 'Bob',
+        lastName: 'Pending',
+        ssn: '222333444',
+        dateOfBirth: new Date('1999-03-12'),
+        gender: 'MALE',
+        cellPhone: '1231231234',
+        workAuthorizationType: 'F1_CPT_OPT',
+        workAuthorizationStart: new Date('2024-08-01'),
+        workAuthorizationEnd: new Date('2026-08-01'),
+        emergencyContacts: [
+          {
+            firstName: 'Mary',
+            lastName: 'Pending',
+            phone: '4564564567',
+            email: 'mary.pending@domain.com',
+            relationship: 'Mother',
+          },
+        ],
+      },
+      // Employee 2: REJECTED onboarding - H1B visa type
+      {
+        userId: onboardRejected._id,
+        firstName: 'Carol',
+        lastName: 'Rejected',
+        ssn: '555666777',
+        dateOfBirth: new Date('1996-07-25'),
+        gender: 'FEMALE',
+        cellPhone: '7897897890',
+        workAuthorizationType: 'H1B',
+        workAuthorizationStart: new Date('2024-01-01'),
+        workAuthorizationEnd: new Date('2027-01-01'),
+        emergencyContacts: [
+          {
+            firstName: 'Steve',
+            lastName: 'Rejected',
+            phone: '1011011010',
+            email: 'steve.rejected@domain.com',
+            relationship: 'Spouse',
+          },
+        ],
+      },
+      // Employee 3: NOT_STARTED onboarding - Green Card
+      {
+        userId: onboardNotstarted._id,
+        firstName: 'Dan',
+        lastName: 'Notstarted',
+        ssn: '888999000',
+        dateOfBirth: new Date('1995-11-30'),
+        gender: 'MALE',
+        cellPhone: '3213213210',
+        workAuthorizationType: 'GREEN_CARD',
+        emergencyContacts: [
+          {
+            firstName: 'Linda',
+            lastName: 'Notstarted',
+            phone: '6546546540',
+            email: 'linda.notstarted@domain.com',
+            relationship: 'Sister',
           },
         ],
       },
