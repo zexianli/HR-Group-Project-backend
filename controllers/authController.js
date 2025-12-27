@@ -167,12 +167,12 @@ export const register = async (req, res) => {
       [
         {
           userId: newUser._id,
-          firstName: '',
-          lastName: '',
-          ssn: '',
+          firstName: 'PENDING',
+          lastName: 'PENDING',
+          ssn: 'PENDING',
           dateOfBirth: new Date('1900-01-01'),
-          cellPhone: '',
-          workAuthorizationType: 'OTHER',
+          cellPhone: 'PENDING',
+          workAuthorizationType: 'PENDING',
           emergencyContacts: [
             {
               firstName: '',
