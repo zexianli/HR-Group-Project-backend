@@ -8,6 +8,7 @@ import hrOnboardingRoutes from './routes/hrOnboardingRoutes.js';
 import houseRoutes from './routes/houseRoutes.js';
 import employeeVisaRoutes from './routes/employeeVisaRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
+import hrVisaRoutes from './routes/hrVisaRoutes.js';
 import cors from 'cors';
 
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api', uploadRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/hr', hrOnboardingRoutes);
 app.use('/api/employee/visa', employeeVisaRoutes);
+app.use('/api/hr/visa', hrVisaRoutes);
 app.use('/api/housing', houseRoutes);
 app.use('/api/employees', employeeRoutes);
 
