@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import { seedUsers } from './users.seed.js';
 import { seedEmployees } from './employees.seed.js';
 import { seedHouses } from './houses.seed.js';
@@ -11,9 +12,20 @@ dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
+const dropAllCollections = async () => {
+  const collections = await mongoose.connection.db.collections();
+
+  for (const collection of collections) {
+    await collection.drop();
+    console.log(`Dropped collection: ${collection.collectionName}`);
+  }
+};
+
 const runSeeds = async () => {
   try {
     await connectDB(MONGODB_URI); // connect once at the top
+
+    await dropAllCollections();
 
     const users = await seedUsers();
     const employees = await seedEmployees(users);
