@@ -32,7 +32,8 @@ async function getNextAllowedDocType(userId) {
  * Expected multipart from-data:
  * - file: (pdf/jpg/png, <= 5MB)
  * - docType: one of:
- *      profile_picture | driver_license | green_card | citizen | opt_receipt | opt_ead | i983 | i20
+ *      profile_picture | driver_license | opt_receipt | opt_ead | i983 | i20
+ *      | green_card | citizen | h1b | l2 | h4 | other
  */
 export async function uploadFile(req, res) {
   try {
@@ -59,12 +60,6 @@ export async function uploadFile(req, res) {
       case 'driver_license':
         s3Key = `users/${userId}/driver_license.${ext}`;
         break;
-      case 'green_card':
-        s3Key = `users/${userId}/green_card.${ext}`;
-        break;
-      case 'citizen':
-        s3Key = `users/${userId}/citizen.${ext}`;
-        break;
       case 'opt_receipt':
         s3Key = `users/${userId}/opt_receipt.${ext}`;
         break;
@@ -78,6 +73,16 @@ export async function uploadFile(req, res) {
         s3Key = `users/${userId}/i20.${ext}`;
         break;
 
+      // other general workAuthorization docs
+      case 'h1b':
+      case 'l2':
+      case 'h4':
+      case 'other':
+      case 'green_card':
+      case 'citizen':
+        s3Key = `users/${userId}/work_auth.${ext}`; // overwrite single current work-auth doc
+        break;
+
       default:
         return res.status(400).json({ error: 'Invalid docType' });
     }
@@ -88,8 +93,22 @@ export async function uploadFile(req, res) {
       contentType: req.file.mimetype,
     });
 
-    if (docType === 'green_card' || docType === 'citizen') {
-      // no DB updates for these types
+    if (
+      docType === 'green_card' ||
+      docType === 'citizen' ||
+      docType === 'h1b' ||
+      docType === 'l2' ||
+      docType === 'h4' ||
+      docType === 'other'
+    ) {
+      const r = await EmployeeProfile.updateOne(
+        { userId },
+        { $set: { workAuthorizationDocKey: key } },
+        { upsert: false }
+      );
+      if (r.matchedCount === 0) {
+        return res.status(404).json({ error: 'EmployeeProfile not found for this userId' });
+      }
       return res.status(201).json({ url, key, bucket, docType });
     }
 
@@ -171,16 +190,23 @@ export async function getPresignedPreviewUrl(req, res) {
 
     let key = null;
 
-    if (docType === 'driver_license' || docType === 'profile_picture') {
+    if (
+      docType === 'driver_license' ||
+      docType === 'profile_picture' ||
+      docType === 'green_card' ||
+      docType === 'citizen' ||
+      docType === 'h1b' ||
+      docType === 'l2' ||
+      docType === 'h4' ||
+      docType === 'other'
+    ) {
       const profile = await EmployeeProfile.findOne({ userId });
       if (!profile)
         return res.status(404).json({ error: 'EmployeeProfile not found for this userId' });
 
-      if (docType === 'driver_license') {
-        key = profile.driverLicenseDocKey;
-      } else if (docType === 'profile_picture') {
-        key = profile.profilePictureKey;
-      }
+      if (docType === 'driver_license') key = profile.driverLicenseDocKey;
+      else if (docType === 'profile_picture') key = profile.profilePictureKey;
+      else key = profile.workAuthorizationDocKey;
     } else {
       const map = {
         opt_receipt: 'OPT_RECEIPT',
@@ -198,11 +224,13 @@ export async function getPresignedPreviewUrl(req, res) {
     }
     if (!key) return res.status(404).json({ error: 'No document key found' });
 
+    // check if the request wants download
+    const download = String(req.query.download || '').toLowerCase() === 'true';
+
     const url = await getPresignedGetUrl({
       key,
       expiresInSeconds: 60 * 10, // 10 minutes
-      // inline makes the browser display the file inline (e.g. image in a new tab)
-      responseContentDisposition: 'inline',
+      responseContentDisposition: download ? 'attachment' : 'inline',
     });
 
     return res.json({ url, key });

@@ -108,6 +108,8 @@ const EmployeeProfileSchema = new mongoose.Schema(
     otherWorkAuthorizationTitle: { type: String, default: '', trim: true },
     workAuthorizationStart: { type: Date, default: null },
     workAuthorizationEnd: { type: Date, default: null },
+    // Added general DocKey field to support preview / downloads
+    workAuthorizationDocKey: { type: String, default: '' },
 
     // Driver license (if applicable)
     driverLicense: { type: DriverLicenseSchema, default: () => ({}) },
