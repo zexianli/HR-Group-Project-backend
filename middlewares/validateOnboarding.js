@@ -63,105 +63,104 @@ const driverLicenseSchema = z.object({
   expirationDate: dateStr('driverLicense.expirationDate'),
 });
 
-export const onboardingSchema = z
-  .object({
-    // Required basics
-    firstName: nonEmpty('firstName'),
-    lastName: nonEmpty('lastName'),
-    ssn: ssnStr,
-    dateOfBirth: dateOfBirthStr,
-    gender: z.enum(GENDER),
-    cellPhone: phoneStr('cellPhone'),
-    workAuthorizationType: z.enum(WORK_AUTH),
+export const onboardingSchema = z.object({
+  // Required basics
+  firstName: nonEmpty('firstName'),
+  lastName: nonEmpty('lastName'),
+  ssn: ssnStr,
+  dateOfBirth: dateOfBirthStr,
+  gender: z.enum(GENDER),
+  cellPhone: phoneStr('cellPhone'),
+  workAuthorizationType: z.enum(WORK_AUTH),
 
-    // Address (required)
-    address: addressSchema,
+  // Address (required)
+  address: addressSchema,
 
-    // Emergency contacts required (1+)
-    emergencyContacts: z
-      .array(
-        z.object({
-          firstName: nonEmpty('emergencyContacts.firstName'),
-          lastName: nonEmpty('emergencyContacts.lastName'),
-          phone: phoneStr('emergencyContacts.phone'),
-          relationship: nonEmpty('emergencyContacts.relationship'),
+  // Emergency contacts required (1+)
+  emergencyContacts: z
+    .array(
+      z.object({
+        firstName: nonEmpty('emergencyContacts.firstName'),
+        lastName: nonEmpty('emergencyContacts.lastName'),
+        phone: phoneStr('emergencyContacts.phone'),
+        relationship: nonEmpty('emergencyContacts.relationship'),
 
-          // optional
-          middleName: z.string().trim().optional().default(''),
-          email: optionalEmailStr(),
-        })
-      )
-      .min(1, 'At least one emergency contact is required'),
-
-    // Optional fields (safe defaults)
-    middleName: z.string().trim().optional().default(''),
-    preferredName: z.string().trim().optional().default(''),
-    profilePictureKey: z.string().trim().optional().default(''),
-    workPhone: z
-      .string()
-      .trim()
-      .optional()
-      .default('')
-      .refine((val) => !val || (val.length === 10 && !isNaN(Number(val))), {
-        message: 'workPhone must be exactly 10 digits if provided',
-      }),
-
-    otherWorkAuthorizationTitle: z.string().trim().optional().default(''),
-    workAuthorizationStart: dateStr('workAuthorizationStart').optional().nullable(),
-    workAuthorizationEnd: dateStr('workAuthorizationEnd').optional().nullable(),
-
-    driverLicense: driverLicenseSchema.optional(),
-    driverLicenseDocKey: z.string().trim().optional().default(''),
-
-    carInformation: z
-      .object({
-        make: z.string().trim().optional().default(''),
-        model: z.string().trim().optional().default(''),
-        color: z.string().trim().optional().default(''),
-      })
-      .optional()
-      .default({}),
-
-    reference: z
-      .object({
-        firstName: z.string().trim().optional().default(''),
-        lastName: z.string().trim().optional().default(''),
+        // optional
         middleName: z.string().trim().optional().default(''),
-        phone: z
-          .string()
-          .trim()
-          .optional()
-          .default('')
-          .refine((val) => !val || (val.length === 10 && !isNaN(Number(val))), {
-            message: 'reference.phone must be exactly 10 digits if provided',
-          }),
         email: optionalEmailStr(),
-        relationship: z.string().trim().optional().default(''),
       })
-      .optional()
-      .default({}),
-  })
-  .superRefine((data, ctx) => {
-    // Work auth OTHER -> require title
-    if (data.workAuthorizationType === 'OTHER' && !data.otherWorkAuthorizationTitle?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['otherWorkAuthorizationTitle'],
-        message: 'otherWorkAuthorizationTitle is required when workAuthorizationType is OTHER',
-      });
-    }
+    )
+    .min(1, 'At least one emergency contact is required'),
 
-    // Driver license present -> require doc key too
-    if (data.driverLicense) {
-      if (!data.driverLicenseDocKey?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['driverLicenseDocKey'],
-          message: 'driverLicenseDocKey is required when driverLicense is provided',
-        });
-      }
-    }
-  });
+  // Optional fields (safe defaults)
+  middleName: z.string().trim().optional().default(''),
+  preferredName: z.string().trim().optional().default(''),
+  profilePictureKey: z.string().trim().optional().default(''),
+  workPhone: z
+    .string()
+    .trim()
+    .optional()
+    .default('')
+    .refine((val) => !val || (val.length === 10 && !isNaN(Number(val))), {
+      message: 'workPhone must be exactly 10 digits if provided',
+    }),
+
+  otherWorkAuthorizationTitle: z.string().trim().optional().default(''),
+  workAuthorizationStart: dateStr('workAuthorizationStart').optional().nullable(),
+  workAuthorizationEnd: dateStr('workAuthorizationEnd').optional().nullable(),
+
+  driverLicense: driverLicenseSchema.optional(),
+  driverLicenseDocKey: z.string().trim().optional().default(''),
+
+  carInformation: z
+    .object({
+      make: z.string().trim().optional().default(''),
+      model: z.string().trim().optional().default(''),
+      color: z.string().trim().optional().default(''),
+    })
+    .optional()
+    .default({}),
+
+  reference: z
+    .object({
+      firstName: z.string().trim().optional().default(''),
+      lastName: z.string().trim().optional().default(''),
+      middleName: z.string().trim().optional().default(''),
+      phone: z
+        .string()
+        .trim()
+        .optional()
+        .default('')
+        .refine((val) => !val || (val.length === 10 && !isNaN(Number(val))), {
+          message: 'reference.phone must be exactly 10 digits if provided',
+        }),
+      email: optionalEmailStr(),
+      relationship: z.string().trim().optional().default(''),
+    })
+    .optional()
+    .default({}),
+});
+// .superRefine((data, ctx) => {
+//   // Work auth OTHER -> require title
+//   if (data.workAuthorizationType === 'OTHER' && !data.otherWorkAuthorizationTitle?.trim()) {
+//     ctx.addIssue({
+//       code: z.ZodIssueCode.custom,
+//       path: ['otherWorkAuthorizationTitle'],
+//       message: 'otherWorkAuthorizationTitle is required when workAuthorizationType is OTHER',
+//     });
+//   }
+
+// Driver license present -> require doc key too
+// if (data.driverLicense) {
+//   if (!data.driverLicenseDocKey?.trim()) {
+//     ctx.addIssue({
+//       code: z.ZodIssueCode.custom,
+//       path: ['driverLicenseDocKey'],
+//       message: 'driverLicenseDocKey is required when driverLicense is provided',
+//     });
+//   }
+// }
+// });
 
 export function validateOnboarding(req, res, next) {
   try {
