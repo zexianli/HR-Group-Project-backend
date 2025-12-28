@@ -68,7 +68,6 @@ export async function updateMyEmployeeProfile(req, res) {
       'lastName',
       'middleName',
       'preferredName',
-      'dateOfBirth',
 
       // Address & contact
       'address',
