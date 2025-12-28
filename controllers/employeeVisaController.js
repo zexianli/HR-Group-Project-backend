@@ -16,6 +16,7 @@ function computeStatusPayload(docMap) {
   const documents = DOC_ORDER.map((t) => {
     const d = docMap.get(t);
     return {
+      id: d?._id || null,
       documentType: t,
       status: d?.status ?? null,
       uploaded: Boolean(d),
