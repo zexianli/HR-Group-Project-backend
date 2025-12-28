@@ -31,6 +31,7 @@ function computeNextStep(docMap) {
         nextStep: `Waiting for HR approval: ${t}`,
         actionType: 'REVIEW_DOC',
         pendingDocument: {
+          documentId: d._id,
           documentType: t,
           status: d.status,
           documentKey: d.documentKey,
@@ -198,5 +199,74 @@ export async function getAllVisaStatusEmployees(req, res) {
     return res
       .status(500)
       .json({ error: err.message || 'Internal Server Error when getting Employees' });
+  }
+}
+
+export async function reviewDocument(req, res) {
+  try {
+    const { documentId, action, feedback } = req.body;
+    const hrUserId = req.user.id;
+
+    if (!documentId) {
+      return res.status(400).json({
+        message: 'Document ID is required',
+      });
+    }
+
+    if (!action || !['approve', 'reject'].includes(action)) {
+      return res.status(400).json({
+        message: 'Invalid action. Must be "approve" or "reject"',
+      });
+    }
+
+    if (action === 'reject' && (!feedback || feedback.trim() === '')) {
+      return res.status(400).json({
+        message: 'Feedback is required when rejecting a document',
+      });
+    }
+
+    const document = await OPTDocument.findById(documentId);
+
+    if (!document) {
+      return res.status(404).json({
+        message: 'Document not found',
+      });
+    }
+
+    const updateData = {
+      status: action === 'approve' ? 'APPROVED' : 'REJECTED',
+      reviewedBy: hrUserId,
+      reviewedAt: new Date(),
+    };
+
+    if (action === 'approve') {
+      updateData.feedback = '';
+    } else {
+      updateData.feedback = feedback.trim();
+    }
+
+    const updatedDocument = await OPTDocument.findByIdAndUpdate(
+      documentId,
+      { $set: updateData },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: `Document ${action}d successfully`,
+      data: {
+        documentId: updatedDocument._id,
+        documentType: updatedDocument.documentType,
+        status: updatedDocument.status,
+        feedback: updatedDocument.feedback,
+        reviewedBy: updatedDocument.reviewedBy,
+        reviewedAt: updatedDocument.reviewedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error reviewing document:', error);
+    return res.status(500).json({
+      message: 'An error occurred while reviewing the document',
+      error: error.message,
+    });
   }
 }
