@@ -27,8 +27,7 @@ const registerSchema = z.object({
 const loginSchema = z.object({
   username: z
     .string()
-    .min(3, 'Username must be at least 3 characters long')
-    .max(12, 'Username can be at most 12 characters long')
+    .min(1, 'Username is required')
     .transform((val) => val.toLowerCase().trim()),
   password: z.string().min(1, 'Password is required'),
 });
