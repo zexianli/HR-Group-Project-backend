@@ -302,7 +302,10 @@ export const getUserHouseReports = async (req, res) => {
       });
     }
 
-    const reports = await ReportThread.find({ houseId: employeeProfile.houseId })
+    const reports = await ReportThread.find({
+      houseId: employeeProfile.houseId,
+      createdBy: userId,
+    })
       .populate('createdBy', 'username')
       .sort({ createdAt: -1 });
 
