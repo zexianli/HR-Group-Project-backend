@@ -9,6 +9,7 @@ const router = express.Router();
 router.use(authenticate, employeeOnly, requireOptVisaCase);
 
 router.get('/status', visaCtrl.getVisaStatus);
+router.get('/documents', visaCtrl.getUploadedDocuments);
 router.get('/i983/templates', visaCtrl.getI983Templates);
 
 export default router;
