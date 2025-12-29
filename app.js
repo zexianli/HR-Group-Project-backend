@@ -10,6 +10,7 @@ import employeeVisaRoutes from './routes/employeeVisaRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
 import hrVisaRoutes from './routes/hrVisaRoutes.js';
 import hrEmployeesRoutes from './routes/hrEmployeesRoutes.js';
+import hrHousingRoutes from './routes/hrHousingRoutes.js';
 import cors from 'cors';
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api', uploadRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/hr', hrOnboardingRoutes);
 app.use('/api/hr/employees', hrEmployeesRoutes);
+app.use('/api/hr/housing', hrHousingRoutes);
 app.use('/api/employee/visa', employeeVisaRoutes);
 app.use('/api/hr/visa', hrVisaRoutes);
 app.use('/api/housing', houseRoutes);
