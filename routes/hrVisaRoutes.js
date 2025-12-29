@@ -8,6 +8,7 @@ router.use(authenticate, hrOnly);
 
 router.get('/pending', hrVisaCtrl.getPendingOptEmployees);
 router.put('/documents/review', hrVisaCtrl.reviewDocument);
+router.post('/notify/:employeeId', hrVisaCtrl.notifyEmployee);
 
 router.get('/all', hrVisaCtrl.getAllVisaStatusEmployees);
 
