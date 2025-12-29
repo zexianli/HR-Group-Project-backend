@@ -91,7 +91,8 @@ export async function getHouseById(req, res) {
 
     // Get all residents for this house
     const residents = await EmployeeProfile.find({ houseId: id })
-      .select('firstName lastName preferredName cellPhone email carInformation')
+      .select('firstName lastName preferredName cellPhone carInformation userId')
+      .populate('userId', 'email')
       .lean();
 
     const residentsData = residents.map((resident) => ({
@@ -101,7 +102,7 @@ export async function getHouseById(req, res) {
         preferredName: resident.preferredName,
       },
       phone: resident.cellPhone,
-      email: resident.email,
+      email: resident.userId?.email || '',
       car: resident.carInformation
         ? {
             make: resident.carInformation.make,
@@ -189,6 +190,9 @@ export async function createHouse(req, res) {
 export async function getHouseReports(req, res) {
   try {
     const { id } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
 
     const house = await House.findById(id);
 
@@ -198,9 +202,13 @@ export async function getHouseReports(req, res) {
       });
     }
 
+    const totalReports = await ReportThread.countDocuments({ houseId: id });
+
     const reports = await ReportThread.find({ houseId: id })
       .populate('createdBy', 'username email')
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     const reportsData = reports.map((report) => ({
@@ -220,6 +228,12 @@ export async function getHouseReports(req, res) {
     return res.status(200).json({
       message: 'House reports retrieved successfully',
       data: reportsData,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalReports / limit),
+        totalReports,
+        reportsPerPage: limit,
+      },
     });
   } catch (error) {
     console.error('Error fetching house reports:', error);
