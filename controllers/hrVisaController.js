@@ -330,7 +330,9 @@ export async function notifyEmployee(req, res) {
       });
     }
 
-    const employeeName = employeeProfile.preferredName || employeeProfile.firstName;
+    const employeeName = employeeProfile.preferredName
+      ? `${employeeProfile.preferredName} ${employeeProfile.lastName}`
+      : `${employeeProfile.firstName} ${employeeProfile.lastName}`;
     await sendVisaDocumentReminderEmail({
       to: user.email,
       name: employeeName,
