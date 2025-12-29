@@ -14,7 +14,7 @@ const createHouseSchema = z.object({
   landlord: z.object({
     fullName: z.string().min(1, 'Landlord full name is required').trim(),
     phone: z.string().min(1, 'Landlord phone is required').trim(),
-    email: z.email('Valid email is required').toLowerCase().trim(),
+    email: z.string().email('Valid email is required').toLowerCase().trim(),
   }),
   facility: z.object({
     bedrooms: z.number().min(0, 'Bedrooms must be 0 or greater'),
