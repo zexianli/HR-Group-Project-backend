@@ -91,7 +91,8 @@ export async function getHouseById(req, res) {
 
     // Get all residents for this house
     const residents = await EmployeeProfile.find({ houseId: id })
-      .select('firstName lastName preferredName cellPhone email carInformation')
+      .select('firstName lastName preferredName cellPhone carInformation userId')
+      .populate('userId', 'email')
       .lean();
 
     const residentsData = residents.map((resident) => ({
@@ -101,7 +102,7 @@ export async function getHouseById(req, res) {
         preferredName: resident.preferredName,
       },
       phone: resident.cellPhone,
-      email: resident.email,
+      email: resident.userId?.email || '',
       car: resident.carInformation
         ? {
             make: resident.carInformation.make,
