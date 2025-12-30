@@ -16,6 +16,7 @@ function computeStatusPayload(docMap) {
   const documents = DOC_ORDER.map((t) => {
     const d = docMap.get(t);
     return {
+      id: d?._id || null,
       documentType: t,
       status: d?.status ?? null,
       uploaded: Boolean(d),
@@ -112,6 +113,53 @@ export async function getI983Templates(req, res) {
   } catch (error) {
     return res.status(500).json({
       message: 'An error occurred while returning I983 Template',
+      error: error.message,
+    });
+  }
+}
+
+export async function getUploadedDocuments(req, res) {
+  try {
+    const userId = req.user.id;
+
+    const documents = await OPTDocument.find({ userId })
+      .select('documentType status documentKey feedback createdAt updatedAt reviewedAt reviewedBy')
+      .lean();
+
+    const documentsWithUrls = await Promise.all(
+      documents.map(async (doc) => {
+        let downloadUrl = null;
+        if (doc.documentKey) {
+          try {
+            downloadUrl = await getPresignedGetUrl({
+              key: doc.documentKey,
+              expiresInSeconds: 60 * 10,
+            });
+          } catch (error) {
+            console.error(`Error generating presigned URL for ${doc.documentKey}:`, error);
+          }
+        }
+
+        return {
+          id: doc._id,
+          documentType: doc.documentType,
+          status: doc.status,
+          feedback: doc.feedback,
+          uploadedAt: doc.createdAt,
+          reviewedAt: doc.reviewedAt,
+          downloadUrl,
+        };
+      })
+    );
+
+    return res.status(200).json({
+      message: 'Documents retrieved successfully',
+      data: documentsWithUrls,
+    });
+  } catch (error) {
+    console.error('Error fetching uploaded documents:', error);
+    return res.status(500).json({
+      message: 'An error occurred while fetching uploaded documents',
       error: error.message,
     });
   }

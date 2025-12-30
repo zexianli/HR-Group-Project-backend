@@ -1,6 +1,8 @@
 import EmployeeProfile from '../models/EmployeeProfile.js';
 import OPTDocument from '../models/OPTDocument.js';
+import User from '../models/User.js';
 import { DOC_ORDER } from './uploadController.js';
+import { sendVisaDocumentReminderEmail } from '../utils/emailService.js';
 
 function daysRemaining(endDate) {
   if (!endDate) return null;
@@ -266,6 +268,92 @@ export async function reviewDocument(req, res) {
     console.error('Error reviewing document:', error);
     return res.status(500).json({
       message: 'An error occurred while reviewing the document',
+      error: error.message,
+    });
+  }
+}
+
+export async function notifyEmployee(req, res) {
+  try {
+    const { employeeId } = req.params;
+
+    const user = await User.findById(employeeId);
+    if (!user) {
+      return res.status(404).json({
+        message: 'Employee not found',
+      });
+    }
+
+    const employeeProfile = await EmployeeProfile.findOne({ userId: employeeId });
+    if (!employeeProfile) {
+      return res.status(404).json({
+        message: 'Employee profile not found',
+      });
+    }
+
+    if (employeeProfile.workAuthorizationType !== 'F1_CPT_OPT') {
+      return res.status(400).json({
+        message: 'Employee does not have F1_CPT_OPT work authorization',
+      });
+    }
+
+    const docs = await OPTDocument.find({ userId: employeeId }).lean();
+    const docMap = new Map(docs.map((d) => [d.documentType, d]));
+
+    let nextDocumentType = null;
+    let action = 'upload';
+
+    for (const t of DOC_ORDER) {
+      const d = docMap.get(t);
+      if (d?.status === 'REJECTED') {
+        nextDocumentType = t;
+        action = 'reupload';
+        break;
+      }
+    }
+
+    // If no rejected, check for missing documents
+    if (!nextDocumentType) {
+      for (const t of DOC_ORDER) {
+        const d = docMap.get(t);
+        if (!d) {
+          nextDocumentType = t;
+          action = 'upload';
+          break;
+        }
+      }
+    }
+
+    if (!nextDocumentType) {
+      return res.status(400).json({
+        message: 'No action required. All documents are uploaded and approved or pending review.',
+      });
+    }
+
+    const employeeName = employeeProfile.preferredName
+      ? `${employeeProfile.preferredName} ${employeeProfile.lastName}`
+      : `${employeeProfile.firstName} ${employeeProfile.lastName}`;
+    await sendVisaDocumentReminderEmail({
+      to: user.email,
+      name: employeeName,
+      documentType: nextDocumentType,
+      action,
+    });
+
+    return res.status(200).json({
+      message: 'Notification sent successfully',
+      data: {
+        employeeId,
+        employeeName,
+        email: user.email,
+        documentType: nextDocumentType,
+        action,
+      },
+    });
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    return res.status(500).json({
+      message: 'An error occurred while sending notification',
       error: error.message,
     });
   }

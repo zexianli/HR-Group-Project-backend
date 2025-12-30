@@ -29,8 +29,8 @@ const runSeeds = async () => {
 
     const users = await seedUsers();
     const employees = await seedEmployees(users);
-    const house = await seedHouses(employees);
-    await seedReports(users, house);
+    const houses = await seedHouses(employees);
+    await seedReports(users, houses[0]);
     await seedOnboarding(users);
     await seedOptDocuments(users);
 

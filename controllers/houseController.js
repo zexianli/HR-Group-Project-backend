@@ -334,6 +334,113 @@ export const getUserHouseReports = async (req, res) => {
   }
 };
 
+export const getReportById = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const reportId = req.params.id;
+
+    const report = await ReportThread.findById(reportId).populate('createdBy', 'username email');
+
+    if (!report) {
+      return res.status(404).json({
+        message: 'Facility report not found',
+      });
+    }
+
+    const isReportCreator = report.createdBy._id.toString() === userId;
+    const isHR = userRole === 'HR';
+
+    if (!isReportCreator && !isHR) {
+      return res.status(403).json({
+        message: 'Access denied. Only the report creator or HR can view this report',
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Report retrieved successfully',
+      data: {
+        id: report._id,
+        houseId: report.houseId,
+        title: report.title,
+        description: report.description,
+        status: report.status,
+        createdBy: {
+          id: report.createdBy._id,
+          username: report.createdBy.username,
+          email: report.createdBy.email,
+        },
+        createdAt: report.createdAt,
+        updatedAt: report.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching report:', error);
+    return res.status(500).json({
+      message: 'An error occurred while fetching the report',
+      error: error.message,
+    });
+  }
+};
+
+export const updateReportStatus = async (req, res) => {
+  try {
+    const userRole = req.user.role;
+    const reportId = req.params.id;
+    const { status } = req.body;
+
+    if (userRole !== 'HR') {
+      return res.status(403).json({
+        message: 'Access denied. Only HR can update report status',
+      });
+    }
+
+    const validStatuses = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        message: 'Invalid status. Must be one of: OPEN, IN_PROGRESS, CLOSED',
+      });
+    }
+
+    const report = await ReportThread.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({
+        message: 'Facility report not found',
+      });
+    }
+
+    report.status = status;
+    await report.save();
+
+    await report.populate('createdBy', 'username email');
+
+    return res.status(200).json({
+      message: 'Report status updated successfully',
+      data: {
+        id: report._id,
+        houseId: report.houseId,
+        title: report.title,
+        description: report.description,
+        status: report.status,
+        createdBy: {
+          id: report.createdBy._id,
+          username: report.createdBy.username,
+          email: report.createdBy.email,
+        },
+        createdAt: report.createdAt,
+        updatedAt: report.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating report status:', error);
+    return res.status(500).json({
+      message: 'An error occurred while updating the report status',
+      error: error.message,
+    });
+  }
+};
+
 export const getReportComments = async (req, res) => {
   try {
     const userId = req.user.id;
