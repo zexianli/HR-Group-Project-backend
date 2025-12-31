@@ -241,7 +241,7 @@ export async function getPresignedPreviewUrl(req, res) {
 
 export async function getPresignedPreviewUrlForHR(req, res) {
   try {
-    const targetUserId = String(req.query.userId || '').trim();
+    const targetUserId = String(req.query.employeeProfileId || '').trim();
     if (!targetUserId) {
       return res.status(400).json({ error: 'Missing userId' });
     }
