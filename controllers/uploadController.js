@@ -275,8 +275,8 @@ export async function getPresignedPreviewUrlForHR(req, res) {
       const map = {
         opt_receipt: 'OPT_RECEIPT',
         opt_ead: 'OPT_EAD',
-        i983: 'I_983',
-        i20: 'I_20',
+        i_983: 'I_983',
+        i_20: 'I_20',
       };
 
       const documentType = map[docType];
