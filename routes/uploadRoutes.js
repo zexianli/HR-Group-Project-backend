@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadFile, getPresignedPreviewUrl } from '../controllers/uploadController.js';
-import { authenticate, employeeOnly } from '../middlewares/auth.js';
+import {
+  uploadFile,
+  getPresignedPreviewUrl,
+  getPresignedPreviewUrlForHR,
+} from '../controllers/uploadController.js';
+import { authenticate, employeeOnly, hrOnly } from '../middlewares/auth.js';
 import { requireOptVisaCase } from '../middlewares/requireOptVisaCase.js';
 
 const router = Router();
@@ -32,5 +36,8 @@ router.post(
 
 // For general purpose and Visa management preview URL retrieval
 router.get('/preview-url', authenticate, getPresignedPreviewUrl);
+
+// For HR
+router.get('/hr/preview-url', authenticate, hrOnly, getPresignedPreviewUrlForHR);
 
 export default router;

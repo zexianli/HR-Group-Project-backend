@@ -238,3 +238,86 @@ export async function getPresignedPreviewUrl(req, res) {
     return res.status(400).json({ error: err.message || 'Failed to generate preview URL' });
   }
 }
+
+export async function getPresignedPreviewUrlForHR(req, res) {
+  try {
+    const employeeProfileId = String(req.query.employeeProfileId || '').trim();
+    if (!employeeProfileId) {
+      return res.status(400).json({ error: 'Missing employeeProfileId' });
+    }
+
+    const docType = (req.query.docType || '').toLowerCase().trim();
+    if (!docType) {
+      return res.status(400).json({ error: 'Invalid or missing docType' });
+    }
+
+    // 1) Resolve target userId from EmployeeProfile _id
+    const profile = await EmployeeProfile.findById(employeeProfileId).lean();
+    if (!profile) {
+      return res.status(404).json({ error: 'EmployeeProfile not found' });
+    }
+
+    const targetUserId = String(profile.userId || '').trim();
+    if (!targetUserId) {
+      return res.status(404).json({ error: 'EmployeeProfile has no userId' });
+    }
+
+    // 2) Resolve S3 key depending on docType
+    let key = null;
+
+    if (
+      docType === 'driver_license' ||
+      docType === 'profile_picture' ||
+      docType === 'green_card' ||
+      docType === 'citizen' ||
+      docType === 'h1b' ||
+      docType === 'l2' ||
+      docType === 'h4' ||
+      docType === 'other'
+    ) {
+      // We already have the profile; just read the key from it
+      if (docType === 'driver_license') key = profile.driverLicenseDocKey;
+      else if (docType === 'profile_picture') key = profile.profilePictureKey;
+      else key = profile.workAuthorizationDocKey;
+    } else {
+      const map = {
+        opt_receipt: 'OPT_RECEIPT',
+        opt_ead: 'OPT_EAD',
+        i983: 'I_983',
+        i20: 'I_20',
+      };
+
+      const documentType = map[docType];
+      if (!documentType) return res.status(400).json({ error: 'Invalid docType' });
+
+      const doc = await OPTDocument.findOne({
+        userId: targetUserId,
+        documentType,
+      }).lean();
+
+      if (!doc?.documentKey) return res.status(404).json({ error: 'Document not found' });
+      key = doc.documentKey;
+    }
+
+    if (!key) return res.status(404).json({ error: 'No document uploaded yet' });
+
+    // 3) Presigned url
+    const download = String(req.query.download || '').toLowerCase() === 'true';
+
+    const url = await getPresignedGetUrl({
+      key,
+      expiresInSeconds: 60 * 10,
+      responseContentDisposition: download ? 'attachment' : 'inline',
+    });
+
+    return res.json({
+      url,
+      key,
+      employeeProfileId,
+      userId: targetUserId, // handy for debugging
+    });
+  } catch (err) {
+    console.error('getPresignedPreviewUrlForHR error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to generate preview URL' });
+  }
+}
