@@ -96,6 +96,7 @@ export async function getHouseById(req, res) {
       .lean();
 
     const residentsData = residents.map((resident) => ({
+      id: resident._id,
       name: {
         firstName: resident.firstName,
         lastName: resident.lastName,
